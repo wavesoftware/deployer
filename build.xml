@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="deployproj" default="usage" basedir=".">
+	<target name="usage">
+		<echo>Project deployment system - © Mediovski 2012
+
+Install using (with root permission):
+# ant install 
+
+Remove using (with root permission):
+# ant remove</echo>
+	</target>
+	
+	<property name="target.dir" value="/usr/local/lib/deployproj" />
+    
+	<target name="install">
+		<copy todir="${target.dir}">
+			<fileset dir="${basedir}">
+				<include name="**/*"/>
+			</fileset>
+		</copy>
+		<symlink resource="${target.dir}/bin/deployproj" link="/usr/bin/deployproj" />
+		<chmod perm="755" file="/usr/bin/deployproj" />
+	    <symlink resource="${target.dir}/etc/deployproj.conf" link="/etc/deployproj.conf" />
+	</target>
+
+	<target name="remove">
+		<delete file="/usr/bin/deployproj" />
+	    <delete file="/etc/deployproj.conf" />
+	    <delete dir="${target.dir}" />
+	</target>
+			
+</project>

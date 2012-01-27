@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+#
+. /etc/deployproj.conf
+
+cd /usr/local/lib/deployproj/src
+$PYTHON deployproj.py $@
