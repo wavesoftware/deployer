@@ -39,9 +39,10 @@ def run(args):
         dir = os.path.join(deploy_dir, dir)
     
     config = ConfigObj(os.path.join(dir, 'project.ini'))
+    general = config['general']
     
-    scm = config['scm']
-    uri = config['uri']
+    scm = general['scm']
+    uri = general['uri']
     if scm not in 'svn,git,hg'.split(','):
         raise BussinessLogicException('Invalid SCM type: %s in  config file: %s' % (scm, config.filename))
     
@@ -52,8 +53,8 @@ def run(args):
     if not os.path.exists(tagDir):
         
         if scm == 'svn':
-            params = (uri, tagDir, config['username'], config['password'])
-            __run('svn co %s %s --username=\'%s\' --password=\'%s\'' % params)
+            params = (uri, tag, tagDir, general['username'], general['password'])
+            __run('svn co %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params)
         if scm == 'git':
             params = (uri, tagDir)
             __run('git clone %s %s' % params)
@@ -76,11 +77,20 @@ def run(args):
         common_paths = f.readlines()
         f.close()
         for path in common_paths:
-            __run('rm -Rf %s/%s' % (tagDir, path))
-            __run('ln -s %s/data/%s %s/%s' % (dir, path, tagDir, path))
+            path = path.strip()
+            target = '%s/data/%s' % (dir, path)
+            tag_path = '%s/%s' % (tagDir, path)
+            if not os.path.exists(target):
+                if os.path.isfile(tag_path):
+                    __run('mkdir -p %s' % os.path.dirname(target))
+                    __run('cp %s %s' % (tag_path, target))
+                else:
+                    __run('mkdir -p %s' % target)
+            __run('rm -Rf %s' % tag_path)
+            __run('ln -s %s %s' % (target, tag_path))
         
     print 'Setting up application...'
-    __run('phing setup')
+    __run('phing setup -logger phing.listener.DefaultLogger')
     
     return 0
 
