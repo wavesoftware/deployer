@@ -9,12 +9,18 @@ import os.path
 from ConfigParser import ConfigParser
 import commands.checkout
 import commands.help
+import commands.version
+import commands.switch
+import commands.init
 
 program = D(
     description='Project deployment system - Mediovski 2012',
     name='deployproj',
     commands = (
-        commands.checkout, 
+        commands.checkout,
+        commands.switch,
+        commands.version, 
+        commands.init, 
         commands.help
     ),
     context = D(

@@ -10,3 +10,6 @@ description = 'Switches project to tag and runs db migrate'
 
 def run(args):
     pass
+
+def help():
+    return 'switch help'

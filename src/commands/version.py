@@ -10,3 +10,6 @@ description = 'Print project version'
 
 def run(args):
     pass
+
+def help():
+    return 'version help'

@@ -58,6 +58,7 @@ if __name__ == '__main__':
     except Exception, e:
         prog.get_module('help').error = e
         code = prog.run_command('help', args)
+        
+    if code == None:
+        code = 0
     sys.exit(code)
-    #parser = argparse.ArgumentParser(description=config.program.description)
-    #args = parser.parse_args()
