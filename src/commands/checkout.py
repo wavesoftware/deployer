@@ -7,6 +7,8 @@ import argparse
 import os
 from configobj import ConfigObj
 from util import BussinessLogicException
+import subprocess
+import sys
 
 alias   = 'co'
 
@@ -43,21 +45,48 @@ def run(args):
     if scm not in 'svn,git,hg'.split(','):
         raise BussinessLogicException('Invalid SCM type: %s in  config file: %s' % (scm, config.filename))
     
-    commands = []
-    if scm == 'svn':
-        params = (uri, tag, config['username'], config['password'])
-        commands.append('svn co %s/tags/%s --username=\'%s\' --password=\'%s\'' % params)
-    if scm == 'git':
-        params = (uri, dir, tag)
-        commands.append('git clone %s %s/tags/%s' % params)
-    if scm == 'hg':
-        params = (uri, dir, tag)
-        commands.append('hg clone %s %s/tags/%s' % params)
+    print 'Checkout of tag: %s' % tag
     
-    params = (dir, tag)
-    commands.append('cd %s/tags/%s' % params)
-    commands.append('phing setup')
+    tagDir = os.path.join(dir, 'tags', tag)
+    
+    if not os.path.exists(tagDir):
+        
+        if scm == 'svn':
+            params = (uri, tagDir, config['username'], config['password'])
+            __run('svn co %s %s --username=\'%s\' --password=\'%s\'' % params)
+        if scm == 'git':
+            params = (uri, tagDir)
+            __run('git clone %s %s' % params)
+            __run('git checkout %s' % tag)
+        if scm == 'hg':
+            params = (uri, tagDir)
+            __run('hg clone %s %s' % params)
+            __run('hg checkout %s' % tag)
+    
+    else:
+        print 'Tag %s has already been checked out' % tag
+    
+    os.chdir(tagDir)
+    
+    common_paths_file = os.path.join(tagDir, 'config', 'common-paths.conf')
+    if os.path.exists(common_paths_file):
+        print 'Deleting common directories and linking...'
+        
+        f = file(common_paths_file)
+        common_paths = f.readlines()
+        f.close()
+        for path in common_paths:
+            __run('rm -Rf %s/%s' % (tagDir, path))
+            __run('ln -s %s/data/%s %s/%s' % (dir, path, tagDir, path))
+        
+    print 'Setting up application...'
+    __run('phing setup')
+    
     return 0
+
+def __run(cmd):
+    print '>>> ' + cmd
+    subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
 def help():
     parser.print_help()
