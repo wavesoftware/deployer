@@ -1,0 +1,48 @@
+#!/bin/bash
+
+set -e
+set -u
+${DEBIAN_SCRIPT_DEBUG:+ set -v -x}
+
+. /lib/lsb/init-functions
+
+SELF=$(readlink -f $0)
+BASENAME=$(basename $0 | cut -d '.' -f 1)
+
+. $(dirname $(dirname $SELF))/projects.conf $BASENAME
+
+PROJECT_DIR=/var/www/$PROJECT_NO/release
+
+rootcheck() {
+    if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+        log_failure_msg "You must have root priviliges to run this script"
+        exit 2
+    fi  
+}
+
+echo 'Realese managment system - © Mediovski 2011'
+echo "instance: $PROJECT_NAME, type: release"
+echo ''
+
+TAGS_DIR=$PROJECT_DIR/tags
+
+ACTUAL_VER=$(basename `readlink $PROJECT_DIR/src`)
+
+echo 'Available versions:'
+
+for version in `ls $TAGS_DIR`; do
+
+    v_author=`ls -ld $TAGS_DIR/$version | cut -d ' ' -f 3`
+    v_date=`ls -ld $TAGS_DIR/$version | cut -d ' ' -f 6`
+    v_time=`ls -ld $TAGS_DIR/$version | cut -d ' ' -f 7`
+    if [ "$ACTUAL_VER" == "$version" ]; then
+        echo -n " * "
+    else
+        echo -n "   "
+    fi
+    echo "$version      $v_author   $v_date $v_time"
+
+done
+
+echo "Actual varsion: $ACTUAL_VER"
+echo ''
