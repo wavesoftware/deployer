@@ -5,8 +5,10 @@ Created on 27-01-2012
 '''
 import argparse
 import os
-import readline
 from configobj import ConfigObj
+import sys
+import urlparse
+import getpass
 
 description = 'Initiate project structure'
 
@@ -36,14 +38,33 @@ def run(args):
     if not os.path.isdir(os.path.join(dir, 'tags')):
         os.mkdir(os.path.join(dir, 'tags'))
     
-    scm = raw_input('Choose SCM type [svn, hg, git]: ')
-    uri = raw_input('Enter uri for project SCM code: ')
+    while(True):
+        scm = raw_input('Choose SCM type [svn, hg, git]: ')
+        if scm not in 'svn,git,hg'.split(','):
+            print >> sys.stderr, 'Invalid SCM type: %s' % scm
+        else:
+            break
+        
+    while(True):
+        uri = raw_input('Enter uri for project SCM code: ')
+        uriparsed = urlparse.urlparse(uri)
+        if uriparsed.hostname == None:
+            print >> sys.stderr, 'Invalid uri: %s' % uri
+        else:
+            break
     
     filename = os.path.join(dir, 'project.ini')
     config = ConfigObj()
     config.filename = filename
     config['general'] = {}
     general = config['general']
+    
+    if scm == 'svn':
+        username = raw_input('Enter SVN username:')
+        password = getpass.getpass('Enter SVN password:')
+        general['username'] = username
+        general['password'] = password
+    
     general['scm'] = scm
     general['uri'] = uri
     
