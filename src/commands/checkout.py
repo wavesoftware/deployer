@@ -28,7 +28,7 @@ parser.add_argument('-t', '--tag',
 
 def run(args):
     parsed = parser.parse_args(args)
-    dir = parsed.dir[0]
+    dir = project = parsed.dir[0]
     tag = parsed.tag[0]
     
     try:
@@ -91,6 +91,8 @@ def run(args):
         
     print 'Setting up application...'
     __run('phing setup -logger phing.listener.DefaultLogger')
+    
+    print "Done. Switch to this tag using command `%s switch --dir %s --tag %s`" % (sys.argv[0], project, tag)
     
     return 0
 
