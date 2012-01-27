@@ -62,6 +62,9 @@ def run(args):
     
     __run('rm -Rf %s/src' % dir, v)
     __run('ln -s %s %s/src' % (tag_dir, dir), v)
+    
+    print "Running DB migrate"
+    __run('phing migrate -logger phing.listener.DefaultLogger', v)
 
     print 'Done.'
     

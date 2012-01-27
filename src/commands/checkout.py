@@ -9,16 +9,19 @@ from configobj import ConfigObj
 from util import SystemException
 import subprocess
 import sys
+import config
+from os import path
+import pickle
 
 alias   = 'co'
 
 description = 'Fetches tag for project and setups it'
 
 parser = argparse.ArgumentParser(description=description, usage='%(prog)s checkout [options]')
-parser.add_argument('-d', '--dir', 
+parser.add_argument('-p', '--project', 
     nargs=1, 
     required=True, 
-    help="Relative directory of project in ex.: 000/livespace"
+    help="Project defined name"
 )
 parser.add_argument('-t', '--tag', 
     nargs=1, 
@@ -34,18 +37,21 @@ parser.add_argument('-v','--verbose',
 
 def run(args):
     parsed = parser.parse_args(args)
-    dir = project = parsed.dir[0]
+    project_name = project = parsed.project[0]
     tag = parsed.tag[0]
     v = parsed.verbose
     
+    projects_filename = path.join(config.dirs.root, 'projects.pickle')
     try:
-        deploy_dir = os.environ['DEPLOY_TARGET_DIR']
+        projects_file = file(projects_filename)
+        projects = pickle.loads(projects_file.read())
+        projects_file.close()
     except:
-        deploy_dir = '/var/www'
-    if dir[0] != '/':
-        dir = os.path.join(deploy_dir, dir)
+        projects = {}
+        
+    project_dir = projects[project_name]
     
-    config = ConfigObj(os.path.join(dir, 'project.ini'))
+    config = ConfigObj(os.path.join(project_dir, 'project.ini'))
     general = config['general']
     
     scm = general['scm']
@@ -55,7 +61,7 @@ def run(args):
     
     print 'Checkout of tag: %s' % tag
     
-    tagDir = os.path.join(dir, 'tags', tag)
+    tagDir = os.path.join(project_dir, 'tags', tag)
     
     if not os.path.exists(tagDir):
         
@@ -85,7 +91,7 @@ def run(args):
         f.close()
         for path in common_paths:
             path = path.strip()
-            target = '%s/data/%s' % (dir, path)
+            target = '%s/data/%s' % (project_dir, path)
             tag_path = '%s/%s' % (tagDir, path)
             if not os.path.exists(target):
                 if os.path.isfile(tag_path):
@@ -99,7 +105,7 @@ def run(args):
     print 'Setting up application...'
     __run('phing setup -logger phing.listener.DefaultLogger', v)
     
-    print "Done. Switch to this tag using command `%s switch --dir %s --tag %s`" % (sys.argv[0], project, tag)
+    print "Done. Switch to this tag using command `%s switch --project %s --tag %s`" % (sys.argv[0], project_name, tag)
     
     return 0
 

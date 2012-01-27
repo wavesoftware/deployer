@@ -9,34 +9,60 @@ from configobj import ConfigObj
 import sys
 import urlparse
 import getpass
+import config
+import pickle
+from os import path
 
 description = 'Initiate project structure'
 
-parser = argparse.ArgumentParser(description=description, usage='%(prog)s init [options]')
-parser.add_argument('-d', '--dir', 
-    default=os.getcwd(), 
-    required=False, 
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument('dir',
+    default=os.getcwd(),  
+    nargs='?',
     help="Directory of project"
 )
 
 def run(args):
     parsed = parser.parse_args(args)
-    dir = parsed.dir
+    project_dir = parsed.dir
     
+    currdir = os.getcwd()
+    if project_dir[0] != '/':
+        project_dir = path.join(currdir, project_dir)
+    project_dir = path.abspath(project_dir)
+    if not path.isdir(project_dir):
+        os.mkdir(project_dir)
+    os.chdir(project_dir)
+    
+    if not path.isdir(path.join(project_dir, 'common')):
+        os.mkdir(path.join(project_dir, 'common'))
+    if not os.path.isdir(os.path.join(project_dir, 'tags')):
+        os.mkdir(path.join(project_dir, 'tags'))
+    
+    projects_filename = path.join(config.dirs.root, 'projects.pickle')
     try:
-        deploy_dir = os.environ['DEPLOY_TARGET_DIR']
+        projects_file = file(projects_filename)
+        projects = pickle.loads(projects_file.read())
+        projects_file.close()
     except:
-        deploy_dir = '/var/www'
-    if dir[0] != '/':
-        dir = os.path.join(deploy_dir, dir)
-    if not os.path.isdir(dir):
-        os.mkdir(dir)
-    os.chdir(dir)
+        projects = {}
     
-    if not os.path.isdir(os.path.join(dir, 'common')):
-        os.mkdir(os.path.join(dir, 'common'))
-    if not os.path.isdir(os.path.join(dir, 'tags')):
-        os.mkdir(os.path.join(dir, 'tags'))
+    filename = path.join(project_dir, 'project.ini')
+    if path.exists(filename):
+        ini = ConfigObj(filename)
+        general = ini['general']
+        project_name = general['name']
+        print 'Using project: %s' % project_name
+    else:
+        ini = ConfigObj()
+        ini.filename = filename
+        ini['general'] = {}
+        general = ini['general']
+    
+        while(True):
+            project_name = raw_input('Enter project name (must be unique): ')
+            if project_name not in projects:
+                break
     
     while(True):
         scm = raw_input('Choose SCM type [svn, hg, git]: ')
@@ -53,11 +79,7 @@ def run(args):
         else:
             break
     
-    filename = os.path.join(dir, 'project.ini')
-    config = ConfigObj()
-    config.filename = filename
-    config['general'] = {}
-    general = config['general']
+    general['name'] = project_name
     
     if scm == 'svn':
         username = raw_input('Enter SVN username:')
@@ -68,7 +90,15 @@ def run(args):
     general['scm'] = scm
     general['uri'] = uri
     
-    config.write()
+    ini.write()
+    
+    projects[project_name] = project_dir
+    
+    try:
+        projects_file = file(projects_filename, 'w')
+        projects_file.write(pickle.dumps(projects))
+    finally:
+        projects_file.close()
     
     return 0
 
