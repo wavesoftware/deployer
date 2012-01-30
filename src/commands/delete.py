@@ -10,11 +10,11 @@ import sys
 import config
 import json
 
-alias   = 'sw'
+alias   = 'del'
 
-description = 'Switches project to tag and runs db migrate'
+description = 'Deletes projects version'
 
-parser = argparse.ArgumentParser(description=description, usage='%(prog)s switch [options]')
+parser = argparse.ArgumentParser(description=description, usage='%(prog)s delete [options]')
 parser.add_argument('-p', '--project', 
     nargs=1, 
     required=True, 
@@ -47,28 +47,24 @@ def run(args):
         projects_file.close()
     except:
         projects = {}
-        
+    
     try:
         project_dir = projects[project_name]
+        real = os.path.realpath(os.path.join(project_dir, 'src'))
+        actual_tag = os.path.basename(real)
+        tags_dir = os.path.join(project_dir, 'tags')
     except:
         print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
         return 2
     
-    tag_dir = os.path.join(project_dir, 'tags', tag)
+    if tag == actual_tag:
+        print >> sys.stderr, 'Cant delete tag that is activly being used!'
+        return 3
     
-    print "Switching version to tag: %s" % tag
-    if not os.path.exists(tag_dir):
-        print >> sys.stderr, "Tag %s has not been checked out. Use checkout first!" % tag
-        return 1
+    target = os.path.join(tags_dir, tag)
+    __run('rm -Rf %s' % target, v)
     
-    __run('rm -Rf %s/src' % project_dir, v)
-    __run('ln -s %s %s/src' % (tag_dir, project_dir), v)
-    
-    print "Running DB migrate"
-    os.chdir(tag_dir)
-    __run('phing migrate -logger phing.listener.DefaultLogger', v)
-
-    print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
+    print 'Tag: %s deleted for project: %s' % (tag, project_name)      
     
 
 def __run(cmd, verbose = False):

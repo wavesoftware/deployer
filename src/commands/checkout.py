@@ -37,7 +37,7 @@ parser.add_argument('-v','--verbose',
 
 def run(args):
     parsed = parser.parse_args(args)
-    project_name = project = parsed.project[0]
+    project_name = parsed.project[0]
     tag = parsed.tag[0]
     v = parsed.verbose
     
@@ -49,7 +49,11 @@ def run(args):
     except:
         projects = {}
         
-    project_dir = projects[project_name]
+    try:
+        project_dir = projects[project_name]
+    except:
+        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
+        return 2
     
     ini = ConfigObj(path.join(project_dir, 'project.ini'))
     general = ini['general']

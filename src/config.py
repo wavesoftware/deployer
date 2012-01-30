@@ -10,6 +10,9 @@ import commands.checkout
 import commands.help
 import commands.version
 import commands.switch
+import commands.list
+import commands.delete
+import commands.purge
 import commands.init
 
 program = D(
@@ -20,6 +23,9 @@ program = D(
         commands.switch,
         commands.version, 
         commands.init, 
+        commands.list, 
+        commands.delete, 
+        commands.purge, 
         commands.help
     ),
 )
