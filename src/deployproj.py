@@ -54,6 +54,9 @@ if __name__ == '__main__':
             args = sys.argv[2:]
         except:
             pass
+        if command != 'help':
+            print config.program.description
+            print ''
         code = prog.run_command(command, args)
     except Exception, e:
         prog.get_module('help').error = e

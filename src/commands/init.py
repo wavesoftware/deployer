@@ -10,8 +10,8 @@ import sys
 import urlparse
 import getpass
 import config
-import pickle
 from os import path
+import json
 
 description = 'Initiate project structure'
 
@@ -39,10 +39,10 @@ def run(args):
     if not os.path.isdir(os.path.join(project_dir, 'tags')):
         os.mkdir(path.join(project_dir, 'tags'))
     
-    projects_filename = path.join(config.dirs.root, 'projects.pickle')
+    projects_filename = path.join(config.dirs.root, 'projects.dat')
     try:
         projects_file = file(projects_filename)
-        projects = pickle.loads(projects_file.read())
+        projects = json.loads(projects_file.read())
         projects_file.close()
     except:
         projects = {}
@@ -96,7 +96,7 @@ def run(args):
     
     try:
         projects_file = file(projects_filename, 'w')
-        projects_file.write(pickle.dumps(projects))
+        projects_file.write(json.dumps(projects))
     finally:
         projects_file.close()
     

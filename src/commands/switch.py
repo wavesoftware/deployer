@@ -9,16 +9,18 @@ from util import BussinessLogicException
 from configobj import ConfigObj
 import os
 import sys
+import config
+import json
 
 alias   = 'sw'
 
 description = 'Switches project to tag and runs db migrate'
 
 parser = argparse.ArgumentParser(description=description, usage='%(prog)s switch [options]')
-parser.add_argument('-d', '--dir', 
+parser.add_argument('-p', '--project', 
     nargs=1, 
     required=True, 
-    help="Relative directory of project in ex.: 000/livespace"
+    help="Project defined name"
 )
 parser.add_argument('-t', '--tag', 
     nargs=1, 
@@ -41,35 +43,38 @@ def run(args):
     fi
     '''
     parsed = parser.parse_args(args)
-    dir = parsed.dir[0]
+    project_name = parsed.project[0]
     tag = parsed.tag[0]
-    
     v = parsed.verbose
     
+    projects_filename = os.path.join(config.dirs.root, 'projects.dat')
     try:
-        deploy_dir = os.environ['DEPLOY_TARGET_DIR']
+        projects_file = file(projects_filename)
+        projects = json.loads(projects_file.read())
+        projects_file.close()
     except:
-        deploy_dir = '/var/www'
-    if dir[0] != '/':
-        dir = os.path.join(deploy_dir, dir)
+        projects = {}
+        
+    project_dir = projects[project_name]
     
-    tag_dir = os.path.join(dir, 'tags', tag)
+    tag_dir = os.path.join(project_dir, 'tags', tag)
     
     print "Switching version to tag: %s" % tag
     if not os.path.exists(tag_dir):
         print >> sys.stderr, "Tag %s has not been checked out. Use checkout first!" % tag
         return 1
     
-    __run('rm -Rf %s/src' % dir, v)
-    __run('ln -s %s %s/src' % (tag_dir, dir), v)
+    __run('rm -Rf %s/src' % project_dir, v)
+    __run('ln -s %s %s/src' % (tag_dir, project_dir), v)
     
     print "Running DB migrate"
+    os.chdir(tag_dir)
     __run('phing migrate -logger phing.listener.DefaultLogger', v)
 
-    print 'Done.'
+    print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
     
 
-def __run(cmd, verbose):
+def __run(cmd, verbose = False):
     if verbose:
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)

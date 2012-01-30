@@ -4,14 +4,14 @@ Created on 27-01-2012
 @author: ksuszynski
 '''
 import argparse
-import os
 from configobj import ConfigObj
 from util import SystemException
 import subprocess
 import sys
 import config
+import json
 from os import path
-import pickle
+from os import chdir
 
 alias   = 'co'
 
@@ -41,29 +41,29 @@ def run(args):
     tag = parsed.tag[0]
     v = parsed.verbose
     
-    projects_filename = path.join(config.dirs.root, 'projects.pickle')
+    projects_filename = path.join(config.dirs.root, 'projects.dat')
     try:
         projects_file = file(projects_filename)
-        projects = pickle.loads(projects_file.read())
+        projects = json.loads(projects_file.read())
         projects_file.close()
     except:
         projects = {}
         
     project_dir = projects[project_name]
     
-    config = ConfigObj(os.path.join(project_dir, 'project.ini'))
-    general = config['general']
+    ini = ConfigObj(path.join(project_dir, 'project.ini'))
+    general = ini['general']
     
     scm = general['scm']
     uri = general['uri']
     if scm not in 'svn,git,hg'.split(','):
-        raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, config.filename))
+        raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, ini.filename))
     
     print 'Checkout of tag: %s' % tag
     
-    tagDir = os.path.join(project_dir, 'tags', tag)
+    tagDir = path.join(project_dir, 'tags', tag)
     
-    if not os.path.exists(tagDir):
+    if not path.exists(tagDir):
         
         if scm == 'svn':
             params = (uri, tag, tagDir, general['username'], general['password'])
@@ -80,22 +80,22 @@ def run(args):
     else:
         print 'Tag %s has already been checked out' % tag
     
-    os.chdir(tagDir)
+    chdir(tagDir)
     
-    common_paths_file = os.path.join(tagDir, 'config', 'common-paths.conf')
-    if os.path.exists(common_paths_file):
+    common_paths_file = path.join(tagDir, 'config', 'common-paths.conf')
+    if path.exists(common_paths_file):
         print 'Deleting common directories and linking...'
         
         f = file(common_paths_file)
         common_paths = f.readlines()
         f.close()
-        for path in common_paths:
-            path = path.strip()
-            target = '%s/data/%s' % (project_dir, path)
-            tag_path = '%s/%s' % (tagDir, path)
-            if not os.path.exists(target):
-                if os.path.isfile(tag_path):
-                    __run('mkdir -p %s' % os.path.dirname(target), v)
+        for pathd in common_paths:
+            pathd = pathd.strip()
+            target = '%s/data/%s' % (project_dir, pathd)
+            tag_path = '%s/%s' % (tagDir, pathd)
+            if not path.exists(target):
+                if path.isfile(tag_path):
+                    __run('mkdir -p %s' % path.dirname(target), v)
                     __run('cp %s %s' % (tag_path, target), v)
                 else:
                     __run('mkdir -p %s' % target, v)
@@ -109,7 +109,7 @@ def run(args):
     
     return 0
 
-def __run(cmd, verbose):
+def __run(cmd, verbose = False):
     if verbose:
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
