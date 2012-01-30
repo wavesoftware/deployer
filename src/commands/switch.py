@@ -9,6 +9,7 @@ import os
 import sys
 import config
 import json
+from configobj import ConfigObj
 
 alias   = 'sw'
 
@@ -54,6 +55,14 @@ def run(args):
         print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
         return 2
     
+    try:
+        ini = ConfigObj(os.path.join(project_dir, 'project.ini'))
+        general = ini['general']
+        tool = general['tool']
+    except:
+        print >> sys.stderr, "Unknown manage tool"
+        return 3
+    
     tag_dir = os.path.join(project_dir, 'tags', tag)
     
     print "Switching version to tag: %s" % tag
@@ -64,9 +73,14 @@ def run(args):
     __run('rm -Rf %s/src' % project_dir, v)
     __run('ln -s %s %s/src' % (tag_dir, project_dir), v)
     
-    print "Running DB migrate"
-    os.chdir(tag_dir)
-    __run('phing migrate -logger phing.listener.DefaultLogger', v)
+    if tool != 'none':
+        print "Running DB migrate"
+        os.chdir(tag_dir)
+        if tool == 'phing':
+            __run('phing migrate -logger phing.listener.DefaultLogger', v)
+        
+        if tool == 'ant':
+            __run('ant migrate', v)
 
     print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
     

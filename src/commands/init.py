@@ -31,7 +31,7 @@ def run(args):
         project_dir = path.join(currdir, project_dir)
     project_dir = path.abspath(project_dir)
     if not path.isdir(project_dir):
-        os.mkdir(project_dir)
+        os.makedirs(project_dir)
     os.chdir(project_dir)
     
     if not path.isdir(path.join(project_dir, 'common')):
@@ -65,24 +65,57 @@ def run(args):
                 break
     
     while(True):
-        scm = raw_input('Choose SCM type [svn, hg, git]: ')
+        try:
+            default = ' (set: %s)' % general['tool']
+        except:
+            default = ''
+        tool = raw_input('Choose project management tool [phing, ant, none]%s: ' % default)
+        if tool == '' and default != '':
+            tool = general['tool']
+        if tool not in 'phing,ant,none'.split(','):
+            print >> sys.stderr, 'Invalid tool type: %s' % tool
+        else:
+            break
+        
+    while(True):
+        try:
+            default = ' (set: %s)' % general['scm']
+        except:
+            default = ''        
+        scm = raw_input('Choose SCM type [svn, hg, git]%s: ' % default)
+        if scm == '' and default != '':
+            scm = general['scm']
         if scm not in 'svn,git,hg'.split(','):
             print >> sys.stderr, 'Invalid SCM type: %s' % scm
         else:
             break
         
     while(True):
-        uri = raw_input('Enter uri for project SCM code: ')
+        try:
+            default = ' (set: %s)' % general['uri']
+        except:
+            default = ''        
+        uri = raw_input('Enter uri for project SCM code%s: ' % default)
+        if uri == '' and default != '':
+            uri = general['uri']
         uriparsed = urlparse.urlparse(uri)
         if uriparsed.hostname == None:
             print >> sys.stderr, 'Invalid uri: %s' % uri
         else:
             break
+        
     
     general['name'] = project_name
+    general['tool'] = tool
     
     if scm == 'svn':
-        username = raw_input('Enter SVN username:')
+        try:
+            default = ' (set: %s)' % general['username']
+        except:
+            default = '' 
+        username = raw_input('Enter SVN username%s:' % default)
+        if username == '' and default != '':
+            username = general['username']
         password = getpass.getpass('Enter SVN password:')
         general['username'] = username
         general['password'] = password
@@ -100,6 +133,9 @@ def run(args):
     finally:
         projects_file.close()
     
+    print ''
+    print 'Project %s is now setuped. Checkout some tag using `%s checkout [tag]`' % (project_name, sys.argv[0])
+    print ''
     return 0
 
 def help():

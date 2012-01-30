@@ -1,3 +1,5 @@
 
 syntax: regexp
 \.pickle$
+syntax: regexp
+^projects\.dat$

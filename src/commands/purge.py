@@ -45,6 +45,7 @@ def run(args):
         print >> sys.stderr, 'Project is not being managed! Mispelled?'
         return 2
     
+    print 'Project: %s (%s)' % (project_name, project_dir)
     while(True):
         ans = raw_input('Do you relly want to delete whole project with all common data? [yes, NO]: ')
         if ans.lower() not in 'yes,no,'.split(','):
@@ -53,6 +54,14 @@ def run(args):
             break
     if ans.lower() == 'no' or ans == '':
         return 5
+    
+    del projects[project_name]
+    
+    try:
+        projects_file = file(projects_filename, 'w')
+        projects_file.write(json.dumps(projects))
+    finally:
+        projects_file.close()
     __run('rm -Rf %s' % project_dir, v)
     return 0
 

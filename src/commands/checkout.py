@@ -60,33 +60,34 @@ def run(args):
     
     scm = general['scm']
     uri = general['uri']
+    tool = general['tool']
     if scm not in 'svn,git,hg'.split(','):
         raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, ini.filename))
     
     print 'Checkout of tag: %s' % tag
     
-    tagDir = path.join(project_dir, 'tags', tag)
+    tag_dir = path.join(project_dir, 'tags', tag)
     
-    if not path.exists(tagDir):
+    if not path.exists(tag_dir):
         
         if scm == 'svn':
-            params = (uri, tag, tagDir, general['username'], general['password'])
+            params = (uri, tag, tag_dir, general['username'], general['password'])
             __run('svn co %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params, v)
         if scm == 'git':
-            params = (uri, tagDir)
+            params = (uri, tag_dir)
             __run('git clone %s %s' % params, v)
             __run('git checkout %s' % tag, v)
         if scm == 'hg':
-            params = (uri, tagDir)
+            params = (uri, tag_dir)
             __run('hg clone %s %s' % params, v)
             __run('hg checkout %s' % tag, v)
     
     else:
         print 'Tag %s has already been checked out' % tag
     
-    chdir(tagDir)
+    chdir(tag_dir)
     
-    common_paths_file = path.join(tagDir, 'config', 'common-paths.conf')
+    common_paths_file = path.join(tag_dir, 'config', 'common-paths.conf')
     if path.exists(common_paths_file):
         print 'Deleting common directories and linking...'
         
@@ -96,7 +97,7 @@ def run(args):
         for pathd in common_paths:
             pathd = pathd.strip()
             target = '%s/data/%s' % (project_dir, pathd)
-            tag_path = '%s/%s' % (tagDir, pathd)
+            tag_path = '%s/%s' % (tag_dir, pathd)
             if not path.exists(target):
                 if path.isfile(tag_path):
                     __run('mkdir -p %s' % path.dirname(target), v)
@@ -106,8 +107,14 @@ def run(args):
             __run('rm -Rf %s' % tag_path, v)
             __run('ln -s %s %s' % (target, tag_path), v)
         
-    print 'Setting up application...'
-    __run('phing setup -logger phing.listener.DefaultLogger', v)
+    if tool != 'none':
+        print 'Setting up application...'
+        if tool == 'phing':
+            __run('phing setup -logger phing.listener.DefaultLogger', v)
+        
+        if tool == 'ant':
+            __run('ant setup', v)
+        
     
     print "Done. Switch to this tag using command `%s switch --project %s --tag %s`" % (sys.argv[0], project_name, tag)
     
