@@ -29,5 +29,5 @@ Remove using (with root permission):
 	    <delete file="/etc/deployproj.conf" />
 	    <delete dir="${target.dir}" />
 	</target>
-			
+    
 </project>

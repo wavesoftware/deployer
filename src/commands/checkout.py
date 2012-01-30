@@ -88,6 +88,8 @@ def run(args):
     chdir(tag_dir)
     
     common_paths_file = path.join(tag_dir, 'config', 'common-paths.conf')
+    if not path.exists(common_paths_file):
+        common_paths_file = path.join(tag_dir, '.commonpaths')
     if path.exists(common_paths_file):
         print 'Deleting common directories and linking...'
         

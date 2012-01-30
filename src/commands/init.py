@@ -47,6 +47,7 @@ def run(args):
     except:
         projects = {}
     
+    
     filename = path.join(project_dir, 'project.ini')
     if path.exists(filename):
         ini = ConfigObj(filename)
@@ -63,6 +64,8 @@ def run(args):
             project_name = raw_input('Enter project name (must be unique): ')
             if project_name not in projects:
                 break
+    common_file = os.path.join(project_dir, '.commonpaths')
+    print 'Common dirs for storage - relative paths will be looked in "%s" file' % common_file
     
     while(True):
         try:
@@ -134,7 +137,7 @@ def run(args):
         projects_file.close()
     
     print ''
-    print 'Project %s is now setuped. Checkout some tag using `%s checkout [tag]`' % (project_name, sys.argv[0])
+    print 'Project %s is now setuped. Checkout some tag using `%s checkout --project %s --tag [tag]`' % (project_name, sys.argv[0], project_name)
     print ''
     return 0
 
