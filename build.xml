@@ -22,6 +22,8 @@ Remove using (with root permission):
 		<symlink resource="${target.dir}/bin/deployproj" link="/usr/bin/deployproj" />
 		<chmod perm="755" file="/usr/bin/deployproj" />
 	    <symlink resource="${target.dir}/etc/deployproj.conf" link="/etc/deployproj.conf" />
+	    <touch file="${target.dir}/projects.dat" />
+		<chmod perm="666" file="${target.dir}/projects.dat" />
 	</target>
 
 	<target name="remove">

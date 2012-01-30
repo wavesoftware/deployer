@@ -1,4 +1,4 @@
-sudo apt-get install python2.7
+sudo apt-get install python2.7 curl
 pip=`command -v pip`
 if [[ $? -eq 1 ]]; then
     curl http://python-distribute.org/distribute_setup.py | sudo python
