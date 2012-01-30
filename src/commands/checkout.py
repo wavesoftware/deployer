@@ -72,7 +72,7 @@ def run(args):
         
         if scm == 'svn':
             params = (uri, tag, tag_dir, general['username'], general['password'])
-            __run('svn co %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params, v)
+            __run('svn co --non-interactive --trust-server-cert %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params, v)
         if scm == 'git':
             params = (uri, tag_dir)
             __run('git clone %s %s' % params, v)
