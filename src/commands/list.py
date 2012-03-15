@@ -26,15 +26,21 @@ def run(args):
         
         try:
             real = os.path.realpath(os.path.join(project_dir, 'src'))
-            tag = os.path.basename(real)
-            v_author = subprocess.check_output('ls -ld %s | cut -d \' \' -f 3' % real, shell=True).strip()
-            v_date = subprocess.check_output('ls -ld %s | cut -d \' \' -f 6' % real, shell=True).strip()
-            v_time = subprocess.check_output('ls -ld %s | cut -d \' \' -f 7' % real, shell=True).strip()
+            if os.path.exists(real):
+                tag = os.path.basename(real)
+                v_author = subprocess.check_output('ls -ld %s | cut -d \' \' -f 3' % real, shell=True).strip()
+                v_date = subprocess.check_output('ls -ld %s | cut -d \' \' -f 6' % real, shell=True).strip()
+                v_time = subprocess.check_output('ls -ld %s | cut -d \' \' -f 7' % real, shell=True).strip()
+            else:
+                tag = '-'
+                v_author = '-'
+                v_date = '-'
+                v_time = '-'
             no = False
         except:
             continue
             
-        print " - %s %s %s %s %s" % (project_name.ljust(15), tag.ljust(8), v_author.ljust(15), v_date, v_time)
+        print " - %s %s %s %s %s %s" % (project_name.ljust(15), tag.ljust(8), v_author.ljust(15), v_date.ljust(10), v_time.ljust(5), project_dir)
     if no:
         print 'There is no managed project. Initiate one using: %s init [dir]' % sys.argv[0]
     print ''

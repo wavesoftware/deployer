@@ -29,7 +29,9 @@ Remove using (with root permission):
 	<target name="remove">
 		<delete file="/usr/bin/deployproj" />
 	    <delete file="/etc/deployproj.conf" />
-	    <delete dir="${target.dir}" />
+	    <delete includeemptydirs="true">
+	        <fileset dir="${target.dir}" includes="**/*" excludes="projects.dat" />
+	    </delete>
 	</target>
     
 </project>

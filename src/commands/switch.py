@@ -75,17 +75,20 @@ def run(args):
     
     subprojects_file = os.path.join(tag_dir, '.subprojects')
     if not os.path.exists(subprojects_file):
-        subprojects = ['']
+        subprojects = ['.']
     else:
         f = file(subprojects_file)
         subprojects = f.readlines()
         f.close()
         
     for project_path in subprojects:
+        project_path = project_path.strip()
+        if project_path == '':
+            continue
         subproject_dir = os.path.join(tag_dir, project_path)
         os.chdir(subproject_dir)
         if tool != 'none':
-            print "Running DB migrate"
+            print "Running DB migrate: %s" % project_path
             try:
                 if tool == 'phing':
                     __run('phing migrate -logger phing.listener.DefaultLogger', v)

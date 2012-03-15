@@ -93,14 +93,14 @@ def run(args):
     if not path.exists(common_paths_file):
         common_paths_file = path.join(tag_dir, '.sharedfiles')
     if path.exists(common_paths_file):
-        print 'Deleting common directories and linking...'
+        print 'Deleting shared directories and linking...'
         
         f = file(common_paths_file)
         common_paths = f.readlines()
         f.close()
         for pathd in common_paths:
             pathd = pathd.strip()
-            if pathd.strip() == '':
+            if pathd == '':
                 continue
             target = '%s/data/%s' % (project_dir, pathd)
             tag_path = '%s/%s' % (tag_dir, pathd)
@@ -115,17 +115,20 @@ def run(args):
     
     subprojects_file = path.join(tag_dir, '.subprojects')
     if not path.exists(subprojects_file):
-        subprojects = ['']
+        subprojects = ['.']
     else:
         f = file(subprojects_file)
         subprojects = f.readlines()
         f.close()
         
     for project_path in subprojects:
+        project_path = project_path.strip()
+        if project_path == '':
+            continue
         subproject_dir = path.join(tag_dir, project_path)
         chdir(subproject_dir)
         if tool != 'none':
-            print 'Setting up application...'
+            print 'Setting up application: %s...' % project_path
             try:
                 if tool == 'phing':
                     __run('phing setup -logger phing.listener.DefaultLogger', v)
