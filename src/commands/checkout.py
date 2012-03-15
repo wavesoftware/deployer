@@ -76,12 +76,12 @@ def run(args):
         if scm == 'git':
             params = (uri, tag_dir)
             __run('git clone %s %s' % params, v)
-            __run('cd %s' % tag_dir, v)
+            chdir(tag_dir)
             __run('git checkout %s' % tag, v)
         if scm == 'hg':
             params = (uri, tag_dir)
             __run('hg clone %s %s' % params, v)
-            __run('cd %s' % tag_dir, v)
+            chdir(tag_dir)
             __run('hg checkout %s' % tag, v)
     
     else:
