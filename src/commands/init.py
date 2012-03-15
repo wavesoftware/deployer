@@ -64,8 +64,8 @@ def run(args):
             project_name = raw_input('Enter project name (must be unique): ')
             if project_name not in projects:
                 break
-    common_file = os.path.join(project_dir, '.commonpaths')
-    print 'Common dirs for storage - relative paths will be looked in "%s" file' % common_file
+    common_file = os.path.join(project_dir, '.sharedfiles')
+    print 'Shared files for storage - relative paths will be looked in "%s" file' % common_file    
     
     while(True):
         try:

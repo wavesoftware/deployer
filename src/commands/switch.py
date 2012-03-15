@@ -73,14 +73,27 @@ def run(args):
     __run('rm -Rf %s/src' % project_dir, v)
     __run('ln -s %s %s/src' % (tag_dir, project_dir), v)
     
-    if tool != 'none':
-        print "Running DB migrate"
-        os.chdir(tag_dir)
-        if tool == 'phing':
-            __run('phing migrate -logger phing.listener.DefaultLogger', v)
+    subprojects_file = os.path.join(tag_dir, '.subprojects')
+    if not os.path.exists(subprojects_file):
+        subprojects = ['']
+    else:
+        f = file(subprojects_file)
+        subprojects = f.readlines()
+        f.close()
         
-        if tool == 'ant':
-            __run('ant migrate', v)
+    for project_path in subprojects:
+        subproject_dir = os.path.join(tag_dir, project_path)
+        os.chdir(subproject_dir)
+        if tool != 'none':
+            print "Running DB migrate"
+            try:
+                if tool == 'phing':
+                    __run('phing migrate -logger phing.listener.DefaultLogger', v)
+                
+                if tool == 'ant':
+                    __run('ant migrate', v)
+            except:
+                pass    
 
     print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
     

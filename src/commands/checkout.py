@@ -76,10 +76,12 @@ def run(args):
         if scm == 'git':
             params = (uri, tag_dir)
             __run('git clone %s %s' % params, v)
+            __run('cd %s' % tag_dir, v)
             __run('git checkout %s' % tag, v)
         if scm == 'hg':
             params = (uri, tag_dir)
             __run('hg clone %s %s' % params, v)
+            __run('cd %s' % tag_dir, v)
             __run('hg checkout %s' % tag, v)
     
     else:
@@ -87,9 +89,9 @@ def run(args):
     
     chdir(tag_dir)
     
-    common_paths_file = path.join(tag_dir, 'config', 'common-paths.conf')
+    common_paths_file = path.join(tag_dir, 'config', 'sharedfiles.conf')
     if not path.exists(common_paths_file):
-        common_paths_file = path.join(tag_dir, '.commonpaths')
+        common_paths_file = path.join(tag_dir, '.sharedfiles')
     if path.exists(common_paths_file):
         print 'Deleting common directories and linking...'
         
@@ -98,6 +100,8 @@ def run(args):
         f.close()
         for pathd in common_paths:
             pathd = pathd.strip()
+            if pathd.strip() == '':
+                continue
             target = '%s/data/%s' % (project_dir, pathd)
             tag_path = '%s/%s' % (tag_dir, pathd)
             if not path.exists(target):
@@ -108,14 +112,28 @@ def run(args):
                     __run('mkdir -p %s' % target, v)
             __run('rm -Rf %s' % tag_path, v)
             __run('ln -s %s %s' % (target, tag_path), v)
+    
+    subprojects_file = path.join(tag_dir, '.subprojects')
+    if not path.exists(subprojects_file):
+        subprojects = ['']
+    else:
+        f = file(subprojects_file)
+        subprojects = f.readlines()
+        f.close()
         
-    if tool != 'none':
-        print 'Setting up application...'
-        if tool == 'phing':
-            __run('phing setup -logger phing.listener.DefaultLogger', v)
-        
-        if tool == 'ant':
-            __run('ant setup', v)
+    for project_path in subprojects:
+        subproject_dir = path.join(tag_dir, project_path)
+        chdir(subproject_dir)
+        if tool != 'none':
+            print 'Setting up application...'
+            try:
+                if tool == 'phing':
+                    __run('phing setup -logger phing.listener.DefaultLogger', v)
+                
+                if tool == 'ant':
+                    __run('ant setup', v)
+            except:
+                pass
         
     
     print "Done. Switch to this tag using command `%s switch --project %s --tag %s`" % (sys.argv[0], project_name, tag)
