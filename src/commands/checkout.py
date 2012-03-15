@@ -111,7 +111,10 @@ def run(args):
                 else:
                     __run('mkdir -p %s' % target, v)
             __run('rm -Rf %s' % tag_path, v)
-            __run('ln -s %s %s' % (target, tag_path), v)
+            if path.isfile(target):
+                __run('ln %s %s' % (target, tag_path), v)
+            else:
+                __run('ln -s %s %s' % (target, tag_path), v)
     
     subprojects_file = path.join(tag_dir, '.subprojects')
     if not path.exists(subprojects_file):
