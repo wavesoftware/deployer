@@ -3,3 +3,5 @@ syntax: regexp
 \.pickle$
 syntax: regexp
 ^projects\.dat$
+syntax: glob
+build/*

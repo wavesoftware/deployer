@@ -1,12 +1,42 @@
-sudo apt-get install python2.7 curl
-pip=`command -v pip`
-if [[ $? -eq 1 ]]; then
-    curl http://python-distribute.org/distribute_setup.py | sudo python
-    curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo python
-fi
-sudo pip install virtualenv 
-sudo pip install virtualenvwrapper
+#!/bin/bash
 
-mkvirtualenv --distribute --no-site-packages deployproj
+ENV='dev'
+if [ "$1" == "prod" ]; then
+	ENV='prod'
+fi
+	
+python=`command -v python2.7`
+if [[ $? -ne 0 ]]; then
+	sudo apt-get install python2.7
+	python=`command -v python2.7`
+fi
+curl=`command -v curl`
+if [[ $? -ne 0 ]]; then
+	sudo apt-get install curl
+	curl=`command -v curl`
+fi
+
+pip=`command -v pip`
+if [[ $? -ne 0 ]]; then
+    curl http://python-distribute.org/distribute_setup.py | sudo $python
+    curl https://raw.github.com/pypa/pip/master/contrib/get-pip.py | sudo $python
+    pip=`command -v pip`
+fi
+
+if [ "$ENV" != "prod" ]; then
+	x=$(command -v virtualenv)
+	if [[ $? -ne 0 ]]; then
+		sudo $pip install virtualenv
+	fi
+	x=$($pip freeze | grep virtualenvwrapper)
+	if [[ $? -ne 0 ]]; then 
+		sudo $pip install virtualenvwrapper
+	fi
+	x=$(lsvirtualenv | grep deploy-source)
+	if [[ $? -ne 0 ]]; then
+		mkvirtualenv --distribute --no-site-packages deploy-source
+	fi
+	workon deploy-source
+fi
 
 pip install -r pip.deps
