@@ -22,6 +22,16 @@ parser.add_argument('dir',
     help="Directory of project"
 )
 
+def _input(text, conf, default_name):
+    try:
+        default_txt = ' (set: %s)' % conf[default_name]
+    except:
+        default_txt = '' 
+    value = raw_input(text + '%s:' % default_txt)
+    if value == '' and default_txt != '':
+        value = conf[default_name]
+    return value
+
 def run(args):
     parsed = parser.parse_args(args)
     project_dir = parsed.dir
@@ -79,6 +89,11 @@ def run(args):
             print >> sys.stderr, 'Invalid tool type: %s' % tool
         else:
             break
+        
+    if tool != 'none':
+        general['target_setup'] = _input('Enter setup target', general, 'target_setup')
+        general['target_install'] = _input('Enter install target', general, 'target_install')
+        general['target_uninstall'] = _input('Enter uninstall target', general, 'target_uninstall')
         
     while(True):
         try:

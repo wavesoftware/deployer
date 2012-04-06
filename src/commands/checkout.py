@@ -134,10 +134,10 @@ def run(args):
             print 'Setting up application: %s...' % project_path
             try:
                 if tool == 'phing':
-                    __run('phing setup -logger phing.listener.DefaultLogger', v)
+                    __run('phing %s -logger phing.listener.DefaultLogger' % general['target_setup'], v)
                 
                 if tool == 'ant':
-                    __run('ant setup', v)
+                    __run('ant %s' % general['target_setup'], v)
             except:
                 pass
         

@@ -65,6 +65,31 @@ def run(args):
     
     tag_dir = os.path.join(project_dir, 'tags', tag)
     
+    subprojects_file = os.path.join(tag_dir, '.subprojects')
+    if not os.path.exists(subprojects_file):
+        subprojects = ['.']
+    else:
+        f = file(subprojects_file)
+        subprojects = f.readlines()
+        f.close()    
+    
+    for project_path in subprojects:
+        project_path = project_path.strip()
+        if project_path == '':
+            continue
+        subproject_dir = os.path.join(tag_dir, project_path)
+        os.chdir(subproject_dir)
+        if tool != 'none':
+            print "Uninstalling previous version: %s" % project_path
+            try:
+                if tool == 'phing':
+                    __run('phing %s -logger phing.listener.DefaultLogger' % general['target_uninstall'], v)
+                
+                if tool == 'ant':
+                    __run('ant %s' % general['target_uninstall'], v)
+            except:
+                pass    
+    
     print "Switching version to tag: %s" % tag
     if not os.path.exists(tag_dir):
         print >> sys.stderr, "Tag %s has not been checked out. Use checkout first!" % tag
@@ -73,13 +98,6 @@ def run(args):
     __run('rm -Rf %s/src' % project_dir, v)
     __run('ln -s %s %s/src' % (tag_dir, project_dir), v)
     
-    subprojects_file = os.path.join(tag_dir, '.subprojects')
-    if not os.path.exists(subprojects_file):
-        subprojects = ['.']
-    else:
-        f = file(subprojects_file)
-        subprojects = f.readlines()
-        f.close()
         
     for project_path in subprojects:
         project_path = project_path.strip()
@@ -88,13 +106,13 @@ def run(args):
         subproject_dir = os.path.join(tag_dir, project_path)
         os.chdir(subproject_dir)
         if tool != 'none':
-            print "Running DB migrate: %s" % project_path
+            print "Installing: %s" % project_path
             try:
                 if tool == 'phing':
-                    __run('phing migrate -logger phing.listener.DefaultLogger', v)
+                    __run('phing %s -logger phing.listener.DefaultLogger' % general['target_install'], v)
                 
                 if tool == 'ant':
-                    __run('ant migrate', v)
+                    __run('ant %s' % general['target_install'], v)
             except:
                 pass    
 
