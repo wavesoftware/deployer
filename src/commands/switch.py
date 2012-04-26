@@ -63,6 +63,7 @@ def run(args):
         print >> sys.stderr, "Unknown manage tool"
         return 3
     
+    latest_dir = os.path.join(project_dir, 'src')
     tag_dir = os.path.join(project_dir, 'tags', tag)
     
     subprojects_file = os.path.join(tag_dir, '.subprojects')
@@ -77,7 +78,7 @@ def run(args):
         project_path = project_path.strip()
         if project_path == '':
             continue
-        subproject_dir = os.path.join(tag_dir, project_path)
+        subproject_dir = os.path.join(latest_dir, project_path)
         os.chdir(subproject_dir)
         if tool != 'none':
             print "Uninstalling previous version: %s" % project_path
