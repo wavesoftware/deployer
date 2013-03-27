@@ -1,5 +1,7 @@
 #!/bin/bash
 
+INSTALLER=$(readlink -f $0)
+ROOT=$(dirname $INSTALLER)
 ENV='dev'
 if [ "$1" == "prod" ]; then
 	ENV='prod'
@@ -32,11 +34,18 @@ if [ "$ENV" != "prod" ]; then
 	if [[ $? -ne 0 ]]; then 
 		sudo $pip install virtualenvwrapper
 	fi
+	# if virtualenvwrapper.sh is in your PATH (i.e. installed with pip)
+    source `which virtualenvwrapper.sh`
+    #source /path/to/virtualenvwrapper.sh # if it's not in your PATH
 	x=$(lsvirtualenv | grep deploy-source)
 	if [[ $? -ne 0 ]]; then
 		mkvirtualenv --distribute --no-site-packages deploy-source
 	fi
+	cdvirtualenv
+	echo $ROOT > ./.project
+	cd $ROOT
 	workon deploy-source
+	pip install -r pip.deps
+else
+	sudo pip install -r pip.deps
 fi
-
-pip install -r pip.deps

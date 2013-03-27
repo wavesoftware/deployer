@@ -13,7 +13,7 @@ Remove using (with root permission):
 	<property name="target.dir" value="/usr/local/lib/deployproj" />
     
 	<target name="install">
-	    <exec command="pip install -r pip.deps" dir="${basedir}" failonerror="yes" />
+	    <exec command="${basedir}/install.sh prod" dir="${basedir}" failonerror="yes" />
 		<copy todir="${target.dir}">
 			<fileset dir="${basedir}">
 				<include name="**/*"/>

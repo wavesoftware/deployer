@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
 #
-. /etc/deployproj.conf
 
-cd /usr/local/lib/deployproj/src
+PWD=`pwd`
+INSTALLPATH=/usr/local/lib/deployproj
+EXC=$(readlink -f $0)
+ROOT=$(dirname $(dirname $EXC))
+
+echo $EXC | grep -q $INSTALLPATH
+ret=$?
+if test "$ret" = "0"; then
+	. /etc/deployproj.conf
+	cd $INSTALLPATH/src
+else
+	. $ROOT/etc/deployproj.conf
+	cd $ROOT/src
+fi
+
 $PYTHON deployproj.py $@
+ret=$?
+cd $PWD
+exit $ret
