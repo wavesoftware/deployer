@@ -62,10 +62,11 @@ def run(args):
         return 3
     
     target = os.path.join(tags_dir, tag)
+    if os.path.exists(target) == False:
+        print 'Tag %s does not exists for project: %s' % (tag, project_name)              
+        return 4
     __run('rm -Rf %s' % target, v)
-    
-    print 'Tag: %s deleted for project: %s' % (tag, project_name)      
-    
+    print 'Tag: %s deleted for project: %s' % (tag, project_name)          
 
 def __run(cmd, verbose = False):
     if verbose:

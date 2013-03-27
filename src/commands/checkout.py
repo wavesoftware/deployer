@@ -10,8 +10,10 @@ import subprocess
 import sys
 import config
 import json
+import shutil
 from os import path
 from os import chdir
+import binascii
 
 alias   = 'co'
 
@@ -55,96 +57,98 @@ def run(args):
         print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
         return 2
     
-    ini = ConfigObj(path.join(project_dir, 'project.ini'))
-    general = ini['general']
-    
-    scm = general['scm']
-    uri = general['uri']
-    tool = general['tool']
-    if scm not in 'svn,git,hg'.split(','):
-        raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, ini.filename))
-    
-    print 'Checkout of tag: %s' % tag
-    
-    tag_dir = path.join(project_dir, 'tags', tag)
-    
-    if not path.exists(tag_dir):
+    try:
+        ret = None
+        ini = ConfigObj(path.join(project_dir, 'project.ini'))
+        general = ini['general']
         
-        if scm == 'svn':
-            params = (uri, tag, tag_dir, general['username'], general['password'])
-            __run('svn co --non-interactive --trust-server-cert %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params, v)
-        if scm == 'git':
-            params = (uri, tag_dir)
-            __run('git clone %s %s' % params, v)
-            chdir(tag_dir)
-            __run('git checkout %s' % tag, v)
-        if scm == 'hg':
-            params = (uri, tag_dir)
-            __run('hg clone %s %s' % params, v)
-            chdir(tag_dir)
-            __run('hg checkout %s' % tag, v)
-    
-    else:
-        print 'Tag %s has already been checked out' % tag
-    
-    chdir(tag_dir)
-    
-    common_paths_file = path.join(tag_dir, 'config', 'sharedfiles.conf')
-    if not path.exists(common_paths_file):
-        common_paths_file = path.join(tag_dir, '.sharedfiles')
-    if path.exists(common_paths_file):
-        print 'Deleting shared directories and linking...'
+        scm = general['scm']
+        uri = general['uri']
+        tool = general['tool']
+        if scm not in 'svn,git,hg'.split(','):
+            raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, ini.filename))
         
-        f = file(common_paths_file)
-        common_paths = f.readlines()
-        f.close()
-        for pathd in common_paths:
-            pathd = pathd.strip()
-            if pathd == '':
-                continue
-            target = '%s/data/%s' % (project_dir, pathd)
-            tag_path = '%s/%s' % (tag_dir, pathd)
-            if not path.exists(target):
-                if path.isfile(tag_path):
-                    __run('mkdir -p %s' % path.dirname(target), v)
-                    __run('cp %s %s' % (tag_path, target), v)
+        print 'Checkout of tag: %s' % tag
+        
+        tag_dir = path.join(project_dir, 'tags', tag)
+        
+        if not path.exists(tag_dir):
+            
+            if scm == 'svn':
+                params = (uri, tag, tag_dir, general['username'], general['password'])
+                __run('svn co --non-interactive --trust-server-cert %s/tags/%s %s --username=\'%s\' --password=\'%s\'' % params, v)
+            if scm == 'git':
+                params = (uri, tag_dir)
+                __run('git clone %s %s' % params, v)
+                chdir(tag_dir)
+                __run('git checkout %s' % tag, v)
+            if scm == 'hg':
+                params = (uri, tag_dir)
+                __run('hg clone %s %s' % params, v)
+                chdir(tag_dir)
+                __run('hg checkout %s' % tag, v)
+        
+        else:
+            print 'Tag %s has already been checked out' % tag
+        
+        chdir(tag_dir)
+        
+        common_paths_file = path.join(tag_dir, 'config', 'sharedfiles.conf')
+        if not path.exists(common_paths_file):
+            common_paths_file = path.join(tag_dir, '.sharedfiles')
+        if path.exists(common_paths_file):
+            print 'Deleting shared directories and linking...'
+            
+            f = file(common_paths_file)
+            common_paths = f.readlines()
+            f.close()
+            for pathd in common_paths:
+                pathd = pathd.strip()
+                if pathd == '':
+                    continue
+                target = '%s/data/%s' % (project_dir, pathd)
+                tag_path = '%s/%s' % (tag_dir, pathd)
+                if not path.exists(target):
+                    if path.isfile(tag_path):
+                        __run('mkdir -p %s' % path.dirname(target), v)
+                        __run('cp %s %s' % (tag_path, target), v)
+                    else:
+                        __run('mkdir -p %s' % target, v)
+                __run('rm -Rf %s' % tag_path, v)
+                if path.isfile(target):
+                    __run('ln %s %s' % (target, tag_path), v)
                 else:
-                    __run('mkdir -p %s' % target, v)
-            __run('rm -Rf %s' % tag_path, v)
-            if path.isfile(target):
-                __run('ln %s %s' % (target, tag_path), v)
-            else:
-                __run('ln -s %s %s' % (target, tag_path), v)
-    
-    subprojects_file = path.join(tag_dir, '.subprojects')
-    if not path.exists(subprojects_file):
-        subprojects = ['.']
-    else:
-        f = file(subprojects_file)
-        subprojects = f.readlines()
-        f.close()
+                    __run('ln -s %s %s' % (target, tag_path), v)
         
-    for project_path in subprojects:
-        project_path = project_path.strip()
-        if project_path == '':
-            continue
-        subproject_dir = path.join(tag_dir, project_path)
-        chdir(subproject_dir)
-        if tool != 'none':
-            print 'Setting up application: %s...' % project_path
-            try:
+        subprojects_file = path.join(tag_dir, '.subprojects')
+        if not path.exists(subprojects_file):
+            subprojects = ['.']
+        else:
+            f = file(subprojects_file)
+            subprojects = f.readlines()
+            f.close()
+            
+        ret = 0
+        for project_path in subprojects:
+            project_path = project_path.strip()
+            if project_path == '':
+                continue
+            subproject_dir = path.join(tag_dir, project_path)
+            chdir(subproject_dir)
+            if tool != 'none':
+                print 'Setting up application: %s...' % project_path
                 if tool == 'phing':
                     __run('phing %s -logger phing.listener.DefaultLogger' % general['target_setup'], v)
                 
                 if tool == 'ant':
                     __run('ant %s' % general['target_setup'], v)
-            except:
-                pass
-        
+        print "Done. Switch to this tag using command `deployproj switch --project %s --tag %s`" % (project_name, tag)
+    except BaseException, e:
+        ret = binascii.crc32(str(e)) % 256
+        print >> sys.stderr, "There was errors. Correct project files or deploy setup and try again."
+        shutil.rmtree(tag_dir)
     
-    print "Done. Switch to this tag using command `%s switch --project %s --tag %s`" % (sys.argv[0], project_name, tag)
-    
-    return 0
+    return ret
 
 def __run(cmd, verbose = False):
     if verbose:

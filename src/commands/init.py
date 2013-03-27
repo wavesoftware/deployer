@@ -22,14 +22,18 @@ parser.add_argument('dir',
     help="Directory of project"
 )
 
-def _input(text, conf, default_name):
+def _input(text, conf, default_name, default_value = None):
     try:
-        default_txt = ' (set: %s)' % conf[default_name]
+        default_value = conf[default_name]
     except:
+        pass
+    if default_value != None:
+        default_txt = ' (confirm: %s)' % default_value
+    else: 
         default_txt = '' 
     value = raw_input(text + '%s:' % default_txt)
-    if value == '' and default_txt != '':
-        value = conf[default_name]
+    if value == '':        
+        value = default_value
     return value
 
 def run(args):
@@ -75,7 +79,12 @@ def run(args):
             if project_name not in projects:
                 break
     common_file = os.path.join(project_dir, '.sharedfiles')
-    print 'Shared files for storage - relative paths will be looked in "%s" file' % common_file    
+    print '''
+Shared folders and files will be read from the file "%s".
+This file should contain relative paths to files and 
+directories that should be shared between versions of 
+applications such as "web/upload" directory
+    ''' % common_file    
     
     while(True):
         try:
@@ -91,7 +100,7 @@ def run(args):
             break
         
     if tool != 'none':
-        general['target_setup'] = _input('Enter setup target', general, 'target_setup')
+        general['target_setup'] = _input('Enter setup target', general, 'target_setup', 'build')
         general['target_install'] = _input('Enter install target', general, 'target_install')
         general['target_uninstall'] = _input('Enter uninstall target', general, 'target_uninstall')
         

@@ -8,6 +8,7 @@ import sys
 import argparse
 import config
 from util import BussinessLogicException
+import binascii
 
 class CommandNotFound(BussinessLogicException):
     def __str__(self):
@@ -40,28 +41,37 @@ class deployproj:
     def run_command(self, command, cmdargs):
         if not self.has_command(command):
             raise CommandNotFound(command)
-        self.cmdmap[command].run(cmdargs)
+        return self.cmdmap[command].run(cmdargs)
 
 if __name__ == '__main__':
     prog = deployproj()
     args = []
     try:
         try:
-            command = sys.argv[1]
+            conf = sys.argv[1]
+            command = sys.argv[2]
         except:
             raise CommandNotFound(None)
         try:
-            args = sys.argv[2:]
+            args = sys.argv[3:]
         except:
             pass
         if command != 'help':
             print config.program.description
             print ''
         code = prog.run_command(command, args)
+    except IOError, e:
+        code = binascii.crc32(str(e)) % 256
+        print >> sys.stderr, str(e)
+    except KeyboardInterrupt:
+        code = 9
+    except EOFError:
+        code = 10
     except Exception, e:
         prog.get_module('help').error = e
         code = prog.run_command('help', args)
         
     if code == None:
         code = 0
+    print "\n"
     sys.exit(code)

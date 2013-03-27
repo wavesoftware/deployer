@@ -63,8 +63,10 @@ def run(args):
                 print line
         except:
             print '>> None <<'
-        print ''        
-        print "Actual varsion: %s" % tag        
+        print ''       
+        if tag == 'src':
+            tag = None 
+        print "Actual version: %s" % tag        
     print ''        
 
 
