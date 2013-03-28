@@ -4,11 +4,7 @@ Created on 27-01-2012
 @author: ksuszynski
 '''
 import argparse
-import subprocess
-import os
-import sys
-import config
-import json
+import deployers
 
 alias   = 'del'
 
@@ -40,38 +36,8 @@ def run(args):
     tag = parsed.tag[0]
     v = parsed.verbose
     
-    projects_filename = os.path.join(config.dirs.root, 'projects.dat')
-    try:
-        projects_file = file(projects_filename)
-        projects = json.loads(projects_file.read())
-        projects_file.close()
-    except:
-        projects = {}
-    
-    try:
-        project_dir = projects[project_name]
-        real = os.path.realpath(os.path.join(project_dir, 'src'))
-        actual_tag = os.path.basename(real)
-        tags_dir = os.path.join(project_dir, 'tags')
-    except:
-        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % config.program.name
-        return 2
-    
-    if tag == actual_tag:
-        print >> sys.stderr, 'Cant delete tag that is activly being used!'
-        return 3
-    
-    target = os.path.join(tags_dir, tag)
-    if os.path.exists(target) == False:
-        print 'Tag %s does not exists for project: %s' % (tag, project_name)              
-        return 4
-    __run('rm -Rf %s' % target, v)
-    print 'Tag: %s deleted for project: %s' % (tag, project_name)          
-
-def __run(cmd, verbose = False):
-    if verbose:
-        print '>>> ' + cmd
-    subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
+    deployer = deployers.create(project_name)
+    return deployer.delete(project_name, tag, v)
 
 def phelp():
     parser.print_help()

@@ -10,11 +10,17 @@ class JavaGlassfishWar(AbstractDeployer):
     classdocs
     '''
 
-
     def __init__(self):
         '''
         Constructor
         '''
+        super(JavaGlassfishWar, self).__init__()
+
+    def install(self, subprojects, targetpath, general, verbose=False):
+        raise NotImplementedError()
+    
+    def uninstall(self, subprojects, targetpath, general, verbose=False):
+        raise NotImplementedError()
         
     @staticmethod
     def getDescription():
