@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="deployproj" default="usage" basedir=".">
+<project name="deployer" default="usage" basedir=".">
 	<target name="usage">
 		<echo>Project deployment system - © Mediovski 2012
 
@@ -10,7 +10,7 @@ Remove using (with root permission):
 # ant remove</echo>
 	</target>
 	
-	<property name="target.dir" value="/usr/local/lib/deployproj" />
+	<property name="target.dir" value="/usr/local/lib/deployer" />
     
 	<target name="install">
 	    <exec command="${basedir}/install.sh prod" dir="${basedir}" failonerror="yes" />
@@ -19,16 +19,16 @@ Remove using (with root permission):
 				<include name="**/*"/>
 			</fileset>
 		</copy>
-		<symlink resource="${target.dir}/bin/deployproj" link="/usr/bin/deployproj" />
-		<chmod perm="755" file="/usr/bin/deployproj" />
-	    <symlink resource="${target.dir}/etc/deployproj.conf" link="/etc/deployproj.conf" />
+		<symlink resource="${target.dir}/bin/deployer" link="/usr/bin/deployer" />
+		<chmod perm="755" file="/usr/bin/deployer" />
+	    <symlink resource="${target.dir}/etc/deployer.conf" link="/etc/deployer.conf" />
 	    <touch file="${target.dir}/projects.dat" />
 		<chmod perm="666" file="${target.dir}/projects.dat" />
 	</target>
 
 	<target name="remove">
-		<delete file="/usr/bin/deployproj" />
-	    <delete file="/etc/deployproj.conf" />
+		<delete file="/usr/bin/deployer" />
+	    <delete file="/etc/deployer.conf" />
 	    <delete includeemptydirs="true">
 	        <fileset dir="${target.dir}" includes="**/*" excludes="projects.dat" />
 	    </delete>

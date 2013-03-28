@@ -84,7 +84,7 @@ class AbstractDeployer:
         try:
             project_dir = get_project_dir(project_name)
         except:
-            print >> sys.stderr, 'Project is not being setup! Use `deployproj init [dir]` first'
+            print >> sys.stderr, 'Project is not being setup! Use `deployer init [dir]` first'
             return 2
         
         try:

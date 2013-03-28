@@ -293,10 +293,10 @@ def set_tool(general):
             default = ' (confirm: %s)' % general['tool']
         except:
             default = ''
-        tool = raw_input('Choose project management tool [phing, ant, none]%s: ' % default)
+        tool = raw_input('Choose project management tool [phing, ant, maven, none]%s: ' % default)
         if tool == '' and default != '':
             tool = general['tool']
-        if tool not in 'phing,ant,none'.split(','):
+        if tool not in 'phing,ant,maven,none'.split(','):
             print >> sys.stderr, 'Invalid tool type: %s' % tool
         else:
             break

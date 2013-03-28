@@ -37,14 +37,14 @@ if [ "$ENV" != "prod" ]; then
 	# if virtualenvwrapper.sh is in your PATH (i.e. installed with pip)
     source `which virtualenvwrapper.sh`
     #source /path/to/virtualenvwrapper.sh # if it's not in your PATH
-	x=$(lsvirtualenv | grep deploy-source)
+	x=$(lsvirtualenv | grep deployer)
 	if [[ $? -ne 0 ]]; then
-		mkvirtualenv --distribute --no-site-packages deploy-source
+		mkvirtualenv --distribute --no-site-packages deployer
 	fi
+	workon deployer
 	cdvirtualenv
 	echo $ROOT > ./.project
 	cd $ROOT
-	workon deploy-source
 	pip install -r pip.deps
 else
 	sudo pip install -r pip.deps

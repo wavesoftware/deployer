@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 #
 
-INSTALLPATH=/usr/local/lib/deployproj
+INSTALLPATH=/usr/local/lib/deployer
 EXC=$(readlink -f $0)
 ROOT=$(dirname $(dirname $EXC))
 
 echo $EXC | grep -q $INSTALLPATH
 ret=$?
 if test "$ret" = "0"; then
-	conf=/etc/deployproj.conf
+	conf=/etc/deployer.conf
 	path=$INSTALLPATH/src
 else
-	conf=$ROOT/etc/deployproj.conf
+	conf=$ROOT/etc/deployer.conf
 	path=$ROOT/src
 fi
 PYTHON=$(command -v python)
-$PYTHON $path/deployproj.py $conf $@
+$PYTHON $path/deployer.py $conf $@
 ret=$?
 exit $ret

@@ -33,6 +33,9 @@ class FileSystemDeployer(AbstractDeployer):
             if tool != 'none' and target != 'None':
                 
                 print "Installing: %s" % project_path
+                if tool == 'maven':
+                    self._run('mvn %s' % target, verbose)
+                    
                 if tool == 'phing':
                     self._run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
                 
@@ -50,6 +53,9 @@ class FileSystemDeployer(AbstractDeployer):
             target = general['target_uninstall']
             if tool != 'none' and target != 'None':
                 print "Uninstalling previous version: %s" % project_path
+                if tool == 'maven':
+                    self._run('mvn %s' % target, verbose)
+                    
                 if tool == 'phing':
                     self._run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
                 

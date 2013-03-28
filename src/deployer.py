@@ -16,7 +16,7 @@ class CommandNotFound(BussinessLogicException):
         else:
             return 'Command not found'
 
-class deployproj:
+class deployer:
     
     def __init__(self):
         self.cmdlist = []
@@ -43,7 +43,7 @@ class deployproj:
         return self.cmdmap[command].run(cmdargs)
 
 if __name__ == '__main__':
-    prog = deployproj()
+    prog = deployer()
     args = []
     try:
         try:

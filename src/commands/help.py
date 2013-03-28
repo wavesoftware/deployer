@@ -7,7 +7,7 @@ Created on 27-01-2012
 import config
 import sys
 from util import BussinessLogicException
-import deployproj
+import deployer
 
 description = 'Prints this help, use `help command` for detailed help of command'
 
@@ -19,7 +19,7 @@ def run(args):
     except:
         helpcommand = None
     
-    prog = deployproj.deployproj()
+    prog = deployer.deployer()
     
     if error != None:
         if isinstance(error, BussinessLogicException):

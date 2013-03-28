@@ -142,12 +142,15 @@ Change it by `init` or use `register` command'''
             chdir(subproject_dir)
             if tool != 'none':
                 print 'Setting up application: %s...' % project_path
+                if tool == 'maven':
+                    __run('mvn %s' % general['target_setup'], v)
+                    
                 if tool == 'phing':
                     __run('phing %s -logger phing.listener.DefaultLogger' % general['target_setup'], v)
                 
                 if tool == 'ant':
                     __run('ant %s' % general['target_setup'], v)
-        print "Done. Switch to this tag using command `deployproj switch --project %s --tag %s`" % (project_name, tag)
+        print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
     except BaseException, e:
         ret = (binascii.crc32(str(e)) % 255) + 1
         print >> sys.stderr, "There was errors during checkout!!!"

@@ -16,8 +16,8 @@ import commands.purge
 import commands.init
 
 program = D(
-    description='Deployproj - Project deployment system',
-    name='deployproj',
+    description='deployer - Project deployment system',
+    name='deployer',
     commands = (
         commands.checkout,
         commands.switch,
