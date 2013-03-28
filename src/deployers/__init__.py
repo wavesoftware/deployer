@@ -29,12 +29,18 @@ class AbstractDeployer:
     def __init__(self):
         self.set_runner(AbstractDeployer.__default_runner, AbstractDeployer.__default_output_runner)
     
-    def _run(self, cmd, verbose = False):
+    def run(self, cmd, verbose = False):
         if verbose:
             print '>>> ' + cmd
         ret = self.__runner(self, cmd)
         if ret != 0:
             raise RuntimeError("Errors in command execution", ret)
+        return ret
+    
+    def output(self, cmd, verbose = False):
+        if verbose:
+            print '>>> ' + cmd
+        ret = self.__output_runner(self, cmd)
         return ret
     
     @abc.abstractmethod
@@ -116,8 +122,8 @@ class AbstractDeployer:
             print "Switching version to tag: %s" % tag
             
             if os.path.exists(latest_dir):
-                self._run('rm -Rf %s/src' % project_dir, verbose)
-            self._run('ln -s %s %s/src' % (tag_dir, project_dir), verbose)
+                self.run('rm -Rf %s/src' % project_dir, verbose)
+            self.run('ln -s %s %s/src' % (tag_dir, project_dir), verbose)
             
             self.install(subprojects, tag_dir, general, verbose)
         
@@ -154,9 +160,9 @@ class AbstractDeployer:
                     version = str(version)
                     if version[0] == '.':
                         continue
-                    v_author = deployer.__output_runner(deployer, 'ls -ld %s/%s | cut -d \' \' -f 3' % (tags_dir, version))
-                    v_date = deployer.__output_runner(deployer, 'ls -ld %s/%s | cut -d \' \' -f 6' % (tags_dir, version))
-                    v_time = deployer.__output_runner(deployer,'ls -ld %s/%s | cut -d \' \' -f 7' % (tags_dir, version))
+                    v_author = deployer.output('ls -ld %s/%s | cut -d \' \' -f 3' % (tags_dir, version))
+                    v_date = deployer.output('ls -ld %s/%s | cut -d \' \' -f 6' % (tags_dir, version))
+                    v_time = deployer.output('ls -ld %s/%s | cut -d \' \' -f 7' % (tags_dir, version))
                     
                     if version == tag:
                         line = ' * '
@@ -211,7 +217,7 @@ class AbstractDeployer:
             projects_file.write(json.dumps(projects))
         finally:
             projects_file.close()
-        return self._run('rm -Rf %s' % project_dir, verbose)
+        return self.run('rm -Rf %s' % project_dir, verbose)
     
     @staticmethod
     def list():
@@ -231,9 +237,9 @@ class AbstractDeployer:
                 real = os.path.realpath(os.path.join(project_dir, 'src'))
                 if os.path.exists(real):
                     tag = os.path.basename(real)
-                    v_author = deployer.__output_runner(deployer, 'ls -ld %s | cut -d " " -f 3' % real)
-                    v_date = deployer.__output_runner(deployer, 'ls -ld %s | cut -d " " -f 6' % real)
-                    v_time = deployer.__output_runner(deployer, 'ls -ld %s | cut -d " " -f 7' % real)
+                    v_author = deployer.output('ls -ld %s | cut -d " " -f 3' % real)
+                    v_date = deployer.output('ls -ld %s | cut -d " " -f 6' % real)
+                    v_time = deployer.output('ls -ld %s | cut -d " " -f 7' % real)
                 else:
                     tag = '-'
                     v_author = '-'
@@ -276,8 +282,72 @@ class AbstractDeployer:
         if os.path.exists(target) == False:
             print 'Tag %s does not exists for project: %s' % (tag, project_name)              
             return 4
-        self._run('rm -Rf %s' % target, verbose)
+        self.run('rm -Rf %s' % target, verbose)
         print 'Tag: %s deleted for project: %s' % (tag, project_name)
+    
+    def after_fetch(self, tag_dir, project_name, verbose = False):
+        if not os.path.isdir(tag_dir):
+            return
+        os.chdir(tag_dir)
+        general = get_ini(project_name)
+        tool = general['tool']
+        project_dir = get_project_dir(project_name)
+        common_paths_file = os.path.join(tag_dir, 'config', 'sharedfiles.conf')
+        if not os.path.exists(common_paths_file):
+            common_paths_file = os.path.join(tag_dir, '.sharedfiles')
+        if os.path.exists(common_paths_file):
+            print 'Deleting shared directories and linking...'
+            
+            f = file(common_paths_file)
+            common_paths = f.readlines()
+            f.close()
+            for pathd in common_paths:
+                pathd = pathd.strip()
+                if pathd == '':
+                    continue
+                target = '%s/data/%s' % (project_dir, pathd)
+                tag_path = '%s/%s' % (tag_dir, pathd)
+                if not os.path.exists(target):
+                    if os.path.isfile(tag_path):
+                        self.run('mkdir -p %s' % os.path.dirname(target), verbose)
+                        self.run('cp %s %s' % (tag_path, target), verbose)
+                    else:
+                        self.run('mkdir -p %s' % target, verbose)
+                self.run('rm -Rf %s' % tag_path, verbose)
+                if os.path.isfile(target):
+                    self.run('ln %s %s' % (target, tag_path), verbose)
+                else:
+                    self.run('ln -s %s %s' % (target, tag_path), verbose)
+        
+        subprojects_file = os.path.join(tag_dir, '.subprojects')
+        if not os.path.exists(subprojects_file):
+            subprojects = ['./']
+        else:
+            f = file(subprojects_file)
+            subprojects = f.readlines()
+            f.close()
+            
+        for project_path in subprojects:
+            project_path = project_path.strip()
+            if project_path == '':
+                continue
+            subproject_dir = os.path.join(tag_dir, project_path)
+            os.chdir(subproject_dir)
+            try:
+                target = general['target_setup']
+            except:
+                target = False
+            if tool != 'none' and target:
+                print 'Setting up application: %s...' % project_path
+                if tool == 'maven':
+                    self.run('mvn %s' % target, verbose)
+                    
+                if tool == 'phing':
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                
+                if tool == 'ant':
+                    self.run('ant %s' % target, verbose)
+        
     
     @staticmethod
     def supportsSharedfiles():

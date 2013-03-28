@@ -27,6 +27,8 @@ class FileSystemDeployer(AbstractDeployer):
             if project_path == '':
                 continue
             subproject_dir = os.path.join(targetpath, project_path)
+            if not os.path.isdir(subproject_dir):
+                continue
             os.chdir(subproject_dir)
             tool = general['tool']
             target = general['target_install']
@@ -34,13 +36,13 @@ class FileSystemDeployer(AbstractDeployer):
                 
                 print "Installing: %s" % project_path
                 if tool == 'maven':
-                    self._run('mvn %s' % target, verbose)
+                    self.run('mvn %s' % target, verbose)
                     
                 if tool == 'phing':
-                    self._run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
                 
                 if tool == 'ant':
-                    self._run('ant %s' % target, verbose)
+                    self.run('ant %s' % target, verbose)
                     
     def uninstall(self, subprojects, targetpath, general, verbose=False):
         for project_path in subprojects:
@@ -48,19 +50,21 @@ class FileSystemDeployer(AbstractDeployer):
             if project_path == '':
                 continue
             subproject_dir = os.path.join(targetpath, project_path)
+            if not os.path.isdir(subproject_dir):
+                continue
             os.chdir(subproject_dir)
             tool = general['tool']
             target = general['target_uninstall']
             if tool != 'none' and target != 'None':
                 print "Uninstalling previous version: %s" % project_path
                 if tool == 'maven':
-                    self._run('mvn %s' % target, verbose)
+                    self.run('mvn %s' % target, verbose)
                     
                 if tool == 'phing':
-                    self._run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
                 
                 if tool == 'ant':
-                    self._run('ant %s' % target, verbose)
+                    self.run('ant %s' % target, verbose)
     
    
     @staticmethod

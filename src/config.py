@@ -7,6 +7,7 @@ Created on 30-11-2011
 from util import D
 from os import path
 import commands.checkout
+import commands.register
 import commands.help
 import commands.version
 import commands.switch
@@ -20,6 +21,7 @@ program = D(
     name='deployer',
     commands = (
         commands.checkout,
+        commands.register,
         commands.switch,
         commands.version, 
         commands.init, 
