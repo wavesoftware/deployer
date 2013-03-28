@@ -50,7 +50,7 @@ def run(args):
         print >> sys.stderr, ''
     
     else:
-        print >> sys.stderr, prog.cmdmap[helpcommand].help()
+        print >> sys.stderr, prog.cmdmap[helpcommand].phelp()
     
     
     return 1

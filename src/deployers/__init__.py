@@ -1,5 +1,6 @@
 import abc
 
+
 class AbstractDeployer:
     __metaclass__ = abc.ABCMeta
     
@@ -27,8 +28,8 @@ class AbstractDeployer:
     def delete(self, project, version):
         pass
     
-    @abc.abstractmethod
-    def getDescription(self):
+    @staticmethod
+    def getDescription():
         """
         Gets description on this deployer
         
@@ -37,3 +38,9 @@ class AbstractDeployer:
         """
         return ''
     
+import FileSystemDeployer
+import JavaGlassfish
+types = {
+    1: FileSystemDeployer.FileSystemDeployer,
+    2: JavaGlassfish.JavaGlassfishWar
+}

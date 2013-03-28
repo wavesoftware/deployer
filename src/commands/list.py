@@ -42,7 +42,7 @@ def run(args):
             
         print " - %s %s %s %s %s %s" % (project_name.ljust(15), tag.ljust(8), v_author.ljust(15), v_date.ljust(10), v_time.ljust(5), project_dir)
     if no:
-        print 'There is no managed project. Initiate one using: %s init [dir]' % sys.argv[0]
+        print 'There is no managed project. Initiate one using: %s init [dir]' % config.program.name
     print ''
 
 def __run(cmd, verbose = False):
@@ -50,5 +50,5 @@ def __run(cmd, verbose = False):
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def help():
+def phelp():
     print description

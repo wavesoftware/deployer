@@ -75,5 +75,5 @@ def __run(cmd, verbose = False):
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def help():
+def phelp():
     parser.print_help()

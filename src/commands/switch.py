@@ -68,7 +68,7 @@ def run(args):
         latest_dir = os.path.join(project_dir, 'src')
         tag_dir = os.path.join(project_dir, 'tags', tag)
         if not os.path.exists(tag_dir):
-            print >> sys.stderr, "Tag %s has not been checked out. Use checkout first!" % tag
+            print >> sys.stderr, "Tag %s has not been installed. Use checkout or register first!" % tag
             return 1
         
         subprojects_file = os.path.join(tag_dir, '.subprojects')
@@ -94,7 +94,7 @@ def run(args):
         return 0
     except Exception, e:
         print >> sys.stderr, 'There was errors. Failed to switch to tag: %s for "%s"' % (tag, project_name)
-        return binascii.crc32(str(e)) % 256
+        return (binascii.crc32(str(e)) % 255) + 1
         
 
 def __install(subprojects, tag_dir, general, v):
@@ -139,5 +139,5 @@ def __run(cmd, verbose = False):
     if ret != 0:
         raise RuntimeError("Errors in command execution", ret)
 
-def help():
+def phelp():
     parser.print_help()

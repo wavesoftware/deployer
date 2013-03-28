@@ -54,7 +54,7 @@ def run(args):
         actual_tag = os.path.basename(real)
         tags_dir = os.path.join(project_dir, 'tags')
     except:
-        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
+        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % config.program.name
         return 2
     
     if tag == actual_tag:
@@ -73,5 +73,5 @@ def __run(cmd, verbose = False):
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def help():
+def phelp():
     parser.print_help()

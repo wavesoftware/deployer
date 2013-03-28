@@ -60,16 +60,16 @@ if __name__ == '__main__':
             print config.program.description
             print ''
         code = prog.run_command(command, args)
-    except IOError, e:
-        code = binascii.crc32(str(e)) % 256
-        print >> sys.stderr, str(e)
     except KeyboardInterrupt:
         code = 9
     except EOFError:
         code = 10
-    except Exception, e:
+    except CommandNotFound, e:
         prog.get_module('help').error = e
         code = prog.run_command('help', args)
+    except BaseException, e:
+        code = (binascii.crc32(str(e)) % 255) + 1
+        print >> sys.stderr, "\nSome error occured: " + str(e)
         
     if code == None:
         code = 0

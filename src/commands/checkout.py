@@ -54,7 +54,7 @@ def run(args):
     try:
         project_dir = projects[project_name]
     except:
-        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % sys.argv[0]
+        print >> sys.stderr, 'Project is not being setuped! Use `%s init [dir]` first' % config.program.name
         return 2
     
     try:
@@ -63,10 +63,15 @@ def run(args):
         general = ini['general']
         
         scm = general['scm']
+        if scm == 'none':
+            print >> sys.stderr, '''
+SCM repo is not set. Can't fetch a tag. 
+Change it by `init` or use `register` command'''
+            return 11
         uri = general['uri']
         tool = general['tool']
-        if scm not in 'svn,git,hg'.split(','):
-            raise SystemException('Invalid SCM type: %s in  config file: %s' % (scm, ini.filename))
+        if scm not in 'svn,git,hg,none'.split(','):
+            raise SystemException('Invalid SCM type: %s in config file: %s' % (scm, ini.filename))
         
         print 'Checkout of tag: %s' % tag
         
@@ -144,8 +149,8 @@ def run(args):
                     __run('ant %s' % general['target_setup'], v)
         print "Done. Switch to this tag using command `deployproj switch --project %s --tag %s`" % (project_name, tag)
     except BaseException, e:
-        ret = binascii.crc32(str(e)) % 256
-        print >> sys.stderr, "There was errors. Correct project files or deploy setup and try again."
+        ret = (binascii.crc32(str(e)) % 255) + 1
+        print >> sys.stderr, "There was errors during checkout!!!"
         shutil.rmtree(tag_dir)
     
     return ret
@@ -155,6 +160,6 @@ def __run(cmd, verbose = False):
         print '>>> ' + cmd
     subprocess.check_call(cmd, shell=True, stdout=sys.stdout, stderr=sys.stderr)
 
-def help():
+def phelp():
     parser.print_help()
 
