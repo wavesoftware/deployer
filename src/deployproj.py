@@ -5,7 +5,6 @@ Created on 27-01-2012
 @author: ksuszynski
 '''
 import sys
-import argparse
 import config
 from util import BussinessLogicException
 import binascii

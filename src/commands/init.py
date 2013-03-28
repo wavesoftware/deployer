@@ -5,7 +5,7 @@ Created on 27-01-2012
 '''
 import argparse
 import os
-from configobj import ConfigObj, ConfigObjError
+from configobj import ConfigObj
 import sys
 import urlparse
 import getpass
