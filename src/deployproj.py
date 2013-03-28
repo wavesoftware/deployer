@@ -68,8 +68,8 @@ if __name__ == '__main__':
         prog.get_module('help').error = e
         code = prog.run_command('help', args)
     except BaseException, e:
-        code = (binascii.crc32(str(e)) % 255) + 1
-        print >> sys.stderr, "\nSome error occured: " + str(e)
+        code = (binascii.crc32(repr(e)) % 255) + 1
+        print >> sys.stderr, "\nError occured: " + repr(e)
         
     if code == None:
         code = 0

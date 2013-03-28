@@ -19,3 +19,10 @@ class FileSystemDeployer(AbstractDeployer):
     @staticmethod
     def getDescription():
         return "File system (for ex.: HTML, PHP, Python and Ruby projects)"
+
+    @staticmethod
+    def supportsSharedfiles():
+        """
+        @rtype: bool
+        """
+        return True

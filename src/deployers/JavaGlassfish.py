@@ -19,3 +19,10 @@ class JavaGlassfishWar(AbstractDeployer):
     @staticmethod
     def getDescription():
         return "Glassfish Java EE 6 WAR artifact project"
+    
+    @staticmethod
+    def supportsSharedfiles():
+        """
+        @rtype: bool
+        """
+        return False

@@ -29,6 +29,12 @@ class AbstractDeployer:
         pass
     
     @staticmethod
+    def supportsSharedfiles():
+        """
+        @rtype: bool
+        """
+    
+    @staticmethod
     def getDescription():
         """
         Gets description on this deployer

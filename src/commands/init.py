@@ -5,7 +5,7 @@ Created on 27-01-2012
 '''
 import argparse
 import os
-from configobj import ConfigObj
+from configobj import ConfigObj, ConfigObjError
 import sys
 import urlparse
 import getpass
@@ -13,6 +13,9 @@ import config
 from os import path
 import json
 import deployers
+import select
+import validate
+from util import SystemException
 
 description = 'Initiate project structure. Use linux pipes to run in batch mode (pass a correct "project.ini" contents in STDIN).'
 
@@ -63,20 +66,10 @@ def run(args):
     ini = init_project_ini(project_dir)
     general = ini['general']
     
-    project_name = set_project_name(general, project_dir)
-    project_type = set_project_type(general)
-    tool = set_tool(general)
-    scm = set_scm(general)
-    uri = set_scmuri(general, scm)
-    if scm == 'svn':
-        set_svncredentials(general, scm)
-    
-    general['name'] = project_name
-    general['type'] = project_type
-    general['tool'] = tool    
-    general['scm'] = scm
-    general['uri'] = uri
-    projects[project_name] = project_dir
+    if select.select([sys.stdin,],[],[],0.0)[0]:
+        (project_name, scm) = batch_setup(general, project_dir)
+    else:
+        (project_name, scm) = interactive_setup(general, project_dir)
     
     save_changes(ini)
     
@@ -88,6 +81,54 @@ def run(args):
         print 'Register an artifact as a tag using `%s register --project %s --file [artifact] --tag [tag]`' % (config.program.name, project_name)
     print ''
     return 0
+
+def del_setting(general, key):
+    try:
+        del general[key]
+    except:
+        pass
+
+def batch_setup(general, project_dir):
+    try:
+        stdinput = sys.stdin.readlines()
+    except:
+        pass
+    vtor = validate.Validator()
+    spec = os.path.join(config.root, 'src', 'configspec.ini')
+    stdinput = ConfigObj(stdinput, configspec = spec)
+    result = stdinput.validate(vtor, True)
+    if result != True:
+        raise SystemException("Passed input configuration has errors: " + str(result))
+    for key in 'name,type,tool,scm,uri,username,password'.split(','):
+        if stdinput['general'][key] != None:
+            general[key] = stdinput['general'][key]
+        else:
+            del_setting(general, key)
+    project_name = general['name']
+    scm = general['scm']
+    projects[project_name] = project_dir
+    return (project_name, scm)
+
+def interactive_setup(general, project_dir):
+    project_name = set_project_name(general, project_dir)
+    project_type = set_project_type(general, project_dir)
+    tool = set_tool(general)
+    scm = set_scm(general)
+    uri = set_scmuri(general, scm)
+    if scm == 'svn':
+        set_svncredentials(general, scm)
+    else:
+        del_setting(general, 'username')
+        del_setting(general, 'password')
+    
+    general['name'] = project_name
+    general['type'] = project_type
+    general['tool'] = tool
+    general['scm'] = scm
+    general['uri'] = uri
+    projects[project_name] = project_dir
+    
+    return (project_name, scm)
 
 def init_project_ini(project_dir):
     filename = path.join(project_dir, 'project.ini')
@@ -132,10 +173,9 @@ def set_project_name(general, project_dir):
             project_name = _input('Enter unique project name', general, 'name', project_name)
             if project_name not in projects:
                 break
-    print_sharedfiles_notice(project_dir)
     return project_name
 
-def set_project_type(general):
+def set_project_type(general, project_dir):
     inputm = "Enter project's deployer number, supported types: \n"
     for idx in deployers.types:
         inputm += " [%d] %s\n" % (idx, deployers.types[idx].getDescription())
@@ -150,6 +190,8 @@ def set_project_type(general):
             print >> sys.stderr, "Please, choose one of deplyers"
         else:
             break
+    if deployers.types[project_type].supportsSharedfiles():
+        print_sharedfiles_notice(project_dir)
     return project_type
 
 def print_sharedfiles_notice(project_dir):
@@ -263,6 +305,10 @@ def set_tool(general):
         general['target_setup'] = _input('Enter setup target', general, 'target_setup', 'build')
         general['target_install'] = _input('Enter install target', general, 'target_install')
         general['target_uninstall'] = _input('Enter uninstall target', general, 'target_uninstall')
+    else:
+        del_setting(general, 'target_setup')
+        del_setting(general, 'target_install')
+        del_setting(general, 'target_uninstall')
     
     return tool
 
