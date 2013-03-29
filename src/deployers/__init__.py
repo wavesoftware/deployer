@@ -44,7 +44,7 @@ class AbstractDeployer:
         return ret
     
     @abc.abstractmethod
-    def uninstall(self, subprojects, targetpath, general, verbose = False):
+    def uninstall(self, project_name, tag, subprojects, targetpath, general, verbose = False):
         """
         Uninstalls tag before switch
         
@@ -60,7 +60,7 @@ class AbstractDeployer:
         pass
     
     @abc.abstractmethod
-    def install(self, subprojects, targetpath, general, verbose = False):
+    def install(self, project_name, tag, subprojects, targetpath, general, verbose = False):
         """
         Installs switched tag and runs all installation targets
         
@@ -94,13 +94,13 @@ class AbstractDeployer:
             return 2
         
         try:
-            ini = ConfigObj(os.path.join(project_dir, 'project.ini'))
-            general = ini['general']
+            general = get_ini(project_name)
             general['tool']
         except:
             print >> sys.stderr, "Unknown manage tool"
             return 3
         
+        switched = False
         try:
             latest_dir = os.path.join(project_dir, 'src')
             tag_dir = os.path.join(project_dir, 'tags', tag)
@@ -117,21 +117,35 @@ class AbstractDeployer:
                 f.close()    
             
             if os.path.exists(latest_dir):
-                self.uninstall(subprojects, latest_dir, general, verbose)
+                lasttag = os.readlink(latest_dir).split(os.sep)[-1:][0]
+                self.uninstall(project_name, lasttag, subprojects, latest_dir, general, verbose)
             
             print "Switching version to tag: %s" % tag
             
             if os.path.exists(latest_dir):
                 self.run('rm -Rf %s/src' % project_dir, verbose)
             self.run('ln -s %s %s/src' % (tag_dir, project_dir), verbose)
+            switched = True
             
-            self.install(subprojects, tag_dir, general, verbose)
+            self.install(project_name, tag, subprojects, tag_dir, general, verbose)
         
             print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
             return 0
         except Exception, e:
-            print >> sys.stderr, 'There was errors. Failed to switch to tag: %s for "%s"' % (tag, project_name)
-            return (binascii.crc32(str(e)) % 255) + 1
+            if switched:
+                try:
+                    self.switch_back(project_name, subprojects, general, project_dir, latest_dir, verbose)
+                except BaseException, be:
+                    print >> sys.stderr, 'Failed to switch back to tag: %s for "%s": %s' % (os.path.basename(latest_dir), project_name, repr(be))
+            print >> sys.stderr, 'There was errors. Failed to switch to tag: %s for "%s": %s' % (tag, project_name, repr(e))
+            return (binascii.crc32(repr(e)) % 255) + 1
+        
+    def switch_back(self, project_name, subprojects, general, project_dir, latest_dir, verbose = False):
+        self.run('rm -Rf %s/src' % project_dir, verbose)
+        if os.path.exists(latest_dir):
+            self.run('ln -s %s %s/src' % (latest_dir, project_dir), verbose)
+            tag = os.path.basename(latest_dir)
+            self.install(project_name, tag, subprojects, latest_dir, general, verbose)
     
     def version(self, project_name):
         """
@@ -327,10 +341,9 @@ class AbstractDeployer:
             subprojects = f.readlines()
             f.close()
             
+        scmpath = general.get('scmpath', '')
         for project_path in subprojects:
-            project_path = project_path.strip()
-            if project_path == '':
-                continue
+            project_path = os.path.join(scmpath, project_path).strip()
             subproject_dir = os.path.join(tag_dir, project_path)
             os.chdir(subproject_dir)
             try:
@@ -338,16 +351,28 @@ class AbstractDeployer:
             except:
                 target = False
             if tool != 'none' and target:
-                print 'Setting up application: %s...' % project_path
+                print 'Setting up application: %s' % os.path.relpath(project_path)
                 if tool == 'maven':
-                    self.run('mvn %s' % target, verbose)
+                    self.run('mvn %s' % self.modify_build_target(tool, target), verbose)
                     
                 if tool == 'phing':
-                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % self.modify_build_target(tool, target), verbose)
                 
                 if tool == 'ant':
-                    self.run('ant %s' % target, verbose)
-        
+                    self.run('ant %s' % self.modify_build_target(tool, target), verbose)
+                    
+    def modify_build_target(self, tool, target):
+        return target
+    
+    def modify_install_target(self, tool, target):
+        return target
+    
+    def modify_uninstall_target(self, tool, target):
+        return target
+    
+    @staticmethod
+    def init(general):
+        pass
     
     @staticmethod
     def supportsSharedfiles():

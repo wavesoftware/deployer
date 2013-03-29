@@ -50,7 +50,6 @@ def run(args):
     ret = 0
     try:
         project_dir = get_project_dir(project_name)
-        commands = []
         deployer = deployers.create(project_name)
         
         
@@ -76,18 +75,21 @@ def run(args):
                 if not os.path.isdir(address):
                     deployer.output('mkdir -p %s' % tag_dir, v)
                 deployer.output('cp -R %s %s' % (address, tag_dir), v)
-        for cmd in commands:
-            deployer.output(cmd, v)
-        deployer.after_fetch(tag_dir, project_name, v)
-        print ''
-        print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
-    except Exception, e:
+    except BaseException, e:
         ret = (binascii.crc32(repr(e)) % 255) + 1
-        print >> sys.stderr, "There was errors during register!!!: %s" % repr(e)
+        print >> sys.stderr, "There was errors during registering!!!: %s" % repr(e)
         if os.path.isdir(tag_dir):
             shutil.rmtree(tag_dir)
         else:
             os.unlink(tag_dir)
+        return ret
+    try:
+        deployer.after_fetch(tag_dir, project_name, v)
+        print ''
+        print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
+    except BaseException, e:
+        ret = (binascii.crc32(repr(e)) % 255) + 1
+        print >> sys.stderr, "There was errors during setup after registering!!!: %s" % repr(e)
     return ret
 
 def __get_type(filename):

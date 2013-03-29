@@ -28,7 +28,7 @@ parser.add_argument('dir',
 
 projects = None
 
-def _input(text, conf, default_name, default_value = None):
+def inputdef(text, conf, default_name, default_value = None):
     try:
         default_value = conf[default_name]
         if default_value == "None":
@@ -36,7 +36,7 @@ def _input(text, conf, default_name, default_value = None):
     except:
         pass
     if default_value != None:
-        default_txt = ' (confirm: %s)' % default_value
+        default_txt = ' (confirm: %s)' % repr(default_value)
     else: 
         default_txt = '' 
     value = raw_input(text + '%s: ' % default_txt)
@@ -99,7 +99,7 @@ def batch_setup(general, project_dir):
     result = stdinput.validate(vtor, True)
     if result != True:
         raise SystemException("Passed input configuration has errors: " + str(result))
-    for key in 'name,type,tool,scm,uri,username,password'.split(','):
+    for key in stdinput['general'].keys():
         if stdinput['general'][key] != None:
             general[key] = stdinput['general'][key]
         else:
@@ -113,7 +113,7 @@ def interactive_setup(general, project_dir):
     project_name = set_project_name(general, project_dir)
     project_type = set_project_type(general, project_dir)
     tool = set_tool(general)
-    scm = set_scm(general)
+    scm, scmpath = set_scm(general)
     uri = set_scmuri(general, scm)
     if scm == 'svn':
         set_svncredentials(general, scm)
@@ -125,6 +125,7 @@ def interactive_setup(general, project_dir):
     general['type'] = project_type
     general['tool'] = tool
     general['scm'] = scm
+    general['scmpath'] = scmpath
     general['uri'] = uri
     projects[project_name] = project_dir
     
@@ -170,7 +171,7 @@ def set_project_name(general, project_dir):
             project_name = os.path.basename(project_dir)
             if project_name in projects:
                 project_name = None  
-            project_name = _input('Enter unique project name', general, 'name', project_name)
+            project_name = inputdef('Enter unique project name', general, 'name', project_name)
             if project_name not in projects:
                 break
     return project_name
@@ -181,7 +182,7 @@ def set_project_type(general, project_dir):
         inputm += " [%d] %s\n" % (idx, deployers.types[idx].getDescription())
     inputm += " "
     while(True):
-        project_type = _input(inputm, general, 'type')
+        project_type = inputdef(inputm, general, 'type')
         try:
             project_type = int(project_type)
         except:
@@ -190,7 +191,9 @@ def set_project_type(general, project_dir):
             print >> sys.stderr, "Please, choose one of deplyers"
         else:
             break
-    if deployers.types[project_type].supportsSharedfiles():
+    cls = deployers.types[project_type]
+    cls.init(general)
+    if cls.supportsSharedfiles():
         print_sharedfiles_notice(project_dir)
     return project_type
 
@@ -268,7 +271,7 @@ def set_scm(general):
     @rtype: string
     @return: selected scm
     """
-    while(True):
+    while (True):
         try:
             default = ' (confirm: %s)' % general['scm']
         except:
@@ -280,7 +283,11 @@ def set_scm(general):
             print >> sys.stderr, 'Invalid SCM type: %s' % scm
         else:
             break
-    return scm
+    if scm != 'none':
+        scmpath = inputdef('Enter SCM path', general, 'scmpath', '')
+    else:
+        scmpath = None
+    return (scm, scmpath)
 def set_tool(general):
     """
     @type general: ConfigObj
@@ -302,9 +309,9 @@ def set_tool(general):
             break
         
     if tool != 'none':
-        general['target_setup'] = _input('Enter setup target', general, 'target_setup', 'build')
-        general['target_install'] = _input('Enter install target', general, 'target_install')
-        general['target_uninstall'] = _input('Enter uninstall target', general, 'target_uninstall')
+        general['target_setup'] = inputdef('Enter setup target', general, 'target_setup', 'build')
+        general['target_install'] = inputdef('Enter install target', general, 'target_install')
+        general['target_uninstall'] = inputdef('Enter uninstall target', general, 'target_uninstall')
     else:
         del_setting(general, 'target_setup')
         del_setting(general, 'target_install')

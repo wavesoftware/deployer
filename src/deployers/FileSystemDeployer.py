@@ -21,12 +21,13 @@ class FileSystemDeployer(AbstractDeployer):
         '''
         super(FileSystemDeployer, self).__init__()
     
-    def install(self, subprojects, targetpath, general, verbose=False):
+    def install(self, project_name, tag, subprojects, targetpath, general, verbose=False):
         for project_path in subprojects:
             project_path = project_path.strip()
             if project_path == '':
                 continue
-            subproject_dir = os.path.join(targetpath, project_path)
+            scmpath = general.get('scmpath', '')
+            subproject_dir = os.path.join(targetpath, scmpath, project_path)
             if not os.path.isdir(subproject_dir):
                 continue
             os.chdir(subproject_dir)
@@ -36,20 +37,21 @@ class FileSystemDeployer(AbstractDeployer):
                 
                 print "Installing: %s" % project_path
                 if tool == 'maven':
-                    self.run('mvn %s' % target, verbose)
+                    self.run('mvn %s' % self.modify_install_target(tool, target), verbose)
                     
                 if tool == 'phing':
-                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % self.modify_install_target(tool, target), verbose)
                 
                 if tool == 'ant':
-                    self.run('ant %s' % target, verbose)
+                    self.run('ant %s' % self.modify_install_target(tool, target), verbose)
                     
-    def uninstall(self, subprojects, targetpath, general, verbose=False):
+    def uninstall(self, project_name, tag, subprojects, targetpath, general, verbose=False):
         for project_path in subprojects:
             project_path = project_path.strip()
             if project_path == '':
                 continue
-            subproject_dir = os.path.join(targetpath, project_path)
+            scmpath = general.get('scmpath', '')
+            subproject_dir = os.path.join(targetpath, scmpath, project_path)
             if not os.path.isdir(subproject_dir):
                 continue
             os.chdir(subproject_dir)
@@ -58,15 +60,18 @@ class FileSystemDeployer(AbstractDeployer):
             if tool != 'none' and target != 'None':
                 print "Uninstalling previous version: %s" % project_path
                 if tool == 'maven':
-                    self.run('mvn %s' % target, verbose)
+                    self.run('mvn %s' % self.modify_uninstall_target(tool, target), verbose)
                     
                 if tool == 'phing':
-                    self.run('phing %s -logger phing.listener.DefaultLogger' % target, verbose)
+                    self.run('phing %s -logger phing.listener.DefaultLogger' % self.modify_uninstall_target(tool, target), verbose)
                 
                 if tool == 'ant':
-                    self.run('ant %s' % target, verbose)
+                    self.run('ant %s' % self.modify_uninstall_target(tool, target), verbose)
     
-   
+    @staticmethod
+    def init(general):
+        pass
+    
     @staticmethod
     def getDescription():
         return "File system (for ex.: HTML, PHP, Python and Ruby projects)"

@@ -95,13 +95,18 @@ Change it by `init` or use `register` command'''
         
         else:
             print >> sys.stderr, 'Tag %s has already been checked out' % tag
+    except BaseException, e:
+        ret = (binascii.crc32(repr(e)) % 255) + 1
+        print >> sys.stderr, "There was errors during checkout!!!: %s" % repr(e)
+        shutil.rmtree(tag_dir)
+        return ret
+    try:
         deployer.after_fetch(tag_dir, project_name, v)
         print ''
         print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
     except BaseException, e:
         ret = (binascii.crc32(repr(e)) % 255) + 1
-        print >> sys.stderr, "There was errors during checkout!!!: %s" % repr(e)
-        shutil.rmtree(tag_dir)
+        print >> sys.stderr, "There was errors during setup after checkout!!!: %s" % repr(e)
     
     return ret
 
