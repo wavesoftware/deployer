@@ -5,3 +5,4 @@ syntax: regexp
 ^projects\.dat$
 syntax: glob
 build/*
+*.pyc
