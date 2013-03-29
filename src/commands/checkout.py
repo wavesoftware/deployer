@@ -14,6 +14,7 @@ from os import path
 from os import chdir
 import binascii
 import deployers
+import time
 
 alias   = 'co'
 
@@ -42,6 +43,8 @@ def run(args):
     project_name = parsed.project[0]
     tag = parsed.tag[0]
     v = parsed.verbose
+    
+    start_time = time.time()
     
     projects_filename = path.join(config.dirs.root, 'projects.dat')
     try:
@@ -104,6 +107,7 @@ Change it by `init` or use `register` command'''
         deployer.after_fetch(tag_dir, project_name, v)
         print ''
         print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
+        print 'Completed in %.2f sec.' % (time.time() - start_time)
     except BaseException, e:
         ret = (binascii.crc32(repr(e)) % 255) + 1
         print >> sys.stderr, "There was errors during setup after checkout!!!: %s" % repr(e)

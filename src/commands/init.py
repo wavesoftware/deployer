@@ -125,8 +125,10 @@ def interactive_setup(general, project_dir):
     general['type'] = project_type
     general['tool'] = tool
     general['scm'] = scm
-    general['scmpath'] = scmpath
-    general['uri'] = uri
+    if uri:
+        general['uri'] = uri
+    if scmpath:
+        general['scmpath'] = scmpath
     projects[project_name] = project_dir
     
     return (project_name, scm)
@@ -139,6 +141,7 @@ def init_project_ini(project_dir):
         ini = ConfigObj()
         ini.filename = filename
         ini['general'] = {}
+    ini.write_empty_values = False
     return ini
         
 
@@ -287,6 +290,8 @@ def set_scm(general):
         scmpath = inputdef('Enter SCM path', general, 'scmpath', '')
     else:
         scmpath = None
+        del_setting(general, 'scmpath')
+        del_setting(general, 'uri')
     return (scm, scmpath)
 def set_tool(general):
     """

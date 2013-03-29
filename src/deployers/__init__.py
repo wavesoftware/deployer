@@ -6,6 +6,8 @@ from configobj import ConfigObj
 import subprocess
 import sys
 import binascii
+import time
+from subprocess import CalledProcessError
 
 
 class AbstractDeployer:
@@ -29,18 +31,30 @@ class AbstractDeployer:
     def __init__(self):
         self.set_runner(AbstractDeployer.__default_runner, AbstractDeployer.__default_output_runner)
     
-    def run(self, cmd, verbose = False):
+    def run(self, cmd, verbose = False, throw = True):
         if verbose:
             print '>>> ' + cmd
-        ret = self.__runner(self, cmd)
-        if ret != 0:
-            raise RuntimeError("Errors in command execution", ret)
+        ret = -999
+        try:
+            ret = self.__runner(self, cmd)
+        except CalledProcessError, e:
+            ret = e.returncode
+            if throw:
+                raise e
+        if ret != 0 and throw:
+            raise RuntimeError("Error[%d] in command execution: '%s'" % (ret, cmd))
         return ret
     
-    def output(self, cmd, verbose = False):
+    def output(self, cmd, verbose = False, throw = False):
         if verbose:
             print '>>> ' + cmd
-        ret = self.__output_runner(self, cmd)
+        ret = -999
+        try:
+            ret = self.__output_runner(self, cmd)
+        except BaseException, e:
+            ret = e.returncode
+            if throw:
+                raise e
         return ret
     
     @abc.abstractmethod
@@ -87,6 +101,7 @@ class AbstractDeployer:
         @param verbose: is verbose
         @rtype: None
         """
+        start_time = time.time()
         try:
             project_dir = get_project_dir(project_name)
         except:
@@ -130,6 +145,7 @@ class AbstractDeployer:
             self.install(project_name, tag, subprojects, tag_dir, general, verbose)
         
             print 'Done. Successfully switched to tag: %s for "%s"' % (tag, project_name)
+            print 'Completed in %.2f sec.' % (time.time() - start_time)
             return 0
         except Exception, e:
             if switched:
@@ -208,6 +224,7 @@ class AbstractDeployer:
         try:
             projects = get_projects()
             project_dir = get_project_dir(project_name)
+            general = get_ini(project_name)
         except:
             print >> sys.stderr, 'Project is not being managed! Mispelled?'
             return 2
@@ -231,6 +248,18 @@ class AbstractDeployer:
             projects_file.write(json.dumps(projects))
         finally:
             projects_file.close()
+
+        tag_dir = os.readlink(os.path.join(project_dir, 'src'))
+        subprojects_file = os.path.join(tag_dir, '.subprojects')
+        if not os.path.exists(subprojects_file):
+            subprojects = ['./']
+        else:
+            f = file(subprojects_file)
+            subprojects = f.readlines()
+            f.close()
+        
+        tag = os.path.basename(tag_dir)
+        self.uninstall(project_name, tag, subprojects, tag_dir, general, verbose)
         return self.run('rm -Rf %s' % project_dir, verbose)
     
     @staticmethod

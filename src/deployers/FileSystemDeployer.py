@@ -31,9 +31,9 @@ class FileSystemDeployer(AbstractDeployer):
             if not os.path.isdir(subproject_dir):
                 continue
             os.chdir(subproject_dir)
-            tool = general['tool']
-            target = general['target_install']
-            if tool != 'none' and target != 'None':
+            tool = general.get('tool', None)
+            target = general.get('target_install', None)
+            if tool and tool != 'none' and target:
                 
                 print "Installing: %s" % project_path
                 if tool == 'maven':
@@ -55,9 +55,9 @@ class FileSystemDeployer(AbstractDeployer):
             if not os.path.isdir(subproject_dir):
                 continue
             os.chdir(subproject_dir)
-            tool = general['tool']
-            target = general['target_uninstall']
-            if tool != 'none' and target != 'None':
+            tool = general.get('tool', None)
+            target = general.get('target_uninstall', None)
+            if tool and tool != 'none' and target:
                 print "Uninstalling previous version: %s" % project_path
                 if tool == 'maven':
                     self.run('mvn %s' % self.modify_uninstall_target(tool, target), verbose)
