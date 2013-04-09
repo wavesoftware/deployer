@@ -15,6 +15,17 @@ class CommandNotFound(BussinessLogicException):
             return 'Command not found: %s' % self.message
         else:
             return 'Command not found'
+        
+def retcode(exc):
+    """
+    @type exc: BaseExcption
+    @rtype: Number
+    """
+    try:
+        return exc.retcode
+    except:
+        stri = repr(exc) + str(exc)
+        return (binascii.crc32(stri) % 255) + 1
 
 class deployer:
     
@@ -70,7 +81,7 @@ if __name__ == '__main__':
         args.insert(0, command)
         code = prog.run_command('help', args)
     except BaseException, e:
-        code = (binascii.crc32(repr(e)) % 255) + 1
+        code = retcode(e)
         print >> sys.stderr, "\nError occured: " + repr(e)
         
     if code == None:

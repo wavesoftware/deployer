@@ -12,6 +12,7 @@ import sys
 import deployers
 import binascii
 import shutil
+from deployer import retcode
 
 alias   = 'reg'
 
@@ -76,7 +77,7 @@ def run(args):
                     deployer.output('mkdir -p %s' % tag_dir, v)
                 deployer.output('cp -R %s %s' % (address, tag_dir), v)
     except BaseException, e:
-        ret = (binascii.crc32(repr(e)) % 255) + 1
+        ret = retcode(e)
         print >> sys.stderr, "There was errors during registering!!!: %s" % repr(e)
         if os.path.isdir(tag_dir):
             shutil.rmtree(tag_dir)
@@ -88,7 +89,7 @@ def run(args):
         print ''
         print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
     except BaseException, e:
-        ret = (binascii.crc32(repr(e)) % 255) + 1
+        ret = retcode(e)
         print >> sys.stderr, "There was errors during setup after registering!!!: %s" % repr(e)
     return ret
 

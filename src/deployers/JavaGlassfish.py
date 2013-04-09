@@ -173,6 +173,7 @@ class JavaGlassfishWar(FileSystemDeployer):
                 log = self.get_last_log(50)
                 print >> sys.stderr, log
                 print >> sys.stderr, repr(e)
+                raise e
     
     def uninstall(self, project_name, tag, subprojects, targetpath, general, verbose=False):
         super(JavaGlassfishWar, self).uninstall(project_name, tag, subprojects, targetpath, general, verbose)
@@ -187,11 +188,12 @@ class JavaGlassfishWar(FileSystemDeployer):
             
             print 'Undeploying "%s" app' % (name)
             try:
-                self.run(' '.join(command), verbose)
+                self.run(' '.join(command), verbose, throw=True)
             except CalledProcessError, e:
                 log = self.get_last_log(50)
                 print >> sys.stderr, log
                 print >> sys.stderr, repr(e)
+                raise e
             
     def __attr_glhome(self, tool, target):        
         if tool == 'ant':

@@ -15,6 +15,7 @@ from os import chdir
 import binascii
 import deployers
 import time
+from deployer import retcode
 
 alias   = 'co'
 
@@ -99,7 +100,7 @@ Change it by `init` or use `register` command'''
         else:
             print >> sys.stderr, 'Tag %s has already been checked out' % tag
     except BaseException, e:
-        ret = (binascii.crc32(repr(e)) % 255) + 1
+        ret = retcode(e)
         print >> sys.stderr, "There was errors during checkout!!!: %s" % repr(e)
         shutil.rmtree(tag_dir)
         return ret
@@ -109,7 +110,7 @@ Change it by `init` or use `register` command'''
         print "Done. Switch to this tag using command `deployer switch --project %s --tag %s`" % (project_name, tag)
         print 'Completed in %.2f sec.' % (time.time() - start_time)
     except BaseException, e:
-        ret = (binascii.crc32(repr(e)) % 255) + 1
+        ret = retcode(e)
         print >> sys.stderr, "There was errors during setup after checkout!!!: %s" % repr(e)
     
     return ret

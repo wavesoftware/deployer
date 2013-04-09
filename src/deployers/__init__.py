@@ -8,6 +8,7 @@ import sys
 import binascii
 import time
 from subprocess import CalledProcessError
+import deployer
 
 
 class AbstractDeployer:
@@ -154,7 +155,7 @@ class AbstractDeployer:
                 except BaseException, be:
                     print >> sys.stderr, 'Failed to switch back to tag: %s for "%s": %s' % (os.path.basename(latest_dir), project_name, repr(be))
             print >> sys.stderr, 'There was errors. Failed to switch to tag: %s for "%s": %s' % (tag, project_name, repr(e))
-            return (binascii.crc32(repr(e)) % 255) + 1
+            return deployer.retcode(e)
         
     def switch_back(self, project_name, subprojects, general, project_dir, latest_dir, verbose = False):
         self.run('rm -Rf %s/src' % project_dir, verbose)
